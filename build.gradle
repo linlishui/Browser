@@ -1,0 +1,44 @@
+buildscript {
+
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://www.jitpack.io" }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.6.4'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://www.jitpack.io" }
+    }
+
+//    gradle.projectsEvaluated {
+//        tasks.withType(JavaCompile) {
+//            // 如果有多个jar需要提升优先级，用分号隔开，比如：jar/framework.jar;jar/core-all.jar;
+//            options.compilerArgs.add('-Xbootclasspath/p:app/libs/framework.jar')
+//        }
+//    }
+
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            Set<File> fileSet = options.bootstrapClasspath.getFiles()
+            List<File> newFileList = new ArrayList<>();
+            //相对位置，根据存放的位置修改路径
+            newFileList.add(new File("app/libs/framework.jar"))
+            newFileList.addAll(fileSet)
+            options.bootstrapClasspath = files(
+                    newFileList.toArray()
+            )
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
