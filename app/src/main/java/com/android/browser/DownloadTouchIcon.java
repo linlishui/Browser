@@ -16,10 +16,6 @@
 
 package com.android.browser;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -28,12 +24,16 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Message;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Images;
 import android.webkit.WebView;
 
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Images;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 class DownloadTouchIcon extends AsyncTask<String, Void, Void> {
 
@@ -78,7 +78,7 @@ class DownloadTouchIcon extends AsyncTask<String, Void, Void> {
     /**
      * Use this ctor to not store the touch icon in a database, rather add it to
      * the passed Message's data bundle with the key
-     * {@link BrowserContract.Bookmarks#TOUCH_ICON} and then send the message.
+     * {@link BrowserContractCompat.Bookmarks#TOUCH_ICON} and then send the message.
      */
     public DownloadTouchIcon(Message msg, String userAgent) {
         mMessage = msg;
@@ -123,7 +123,7 @@ class DownloadTouchIcon extends AsyncTask<String, Void, Void> {
                         storeIcon(icon);
                     } else if (mMessage != null) {
                         Bundle b = mMessage.getData();
-                        b.putParcelable(BrowserContract.Bookmarks.TOUCH_ICON, icon);
+                        b.putParcelable(BrowserContractCompat.Bookmarks.TOUCH_ICON, icon);
                     }
                 }
             } catch (IOException ignored) {

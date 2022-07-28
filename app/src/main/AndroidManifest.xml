@@ -19,10 +19,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.browser">
 
+    <!--android:protectionLevel="signatureOrSystem"-->
     <permission
         android:name="com.android.browser.permission.PRELOAD"
         android:label="@string/permission_preload_label"
-        android:protectionLevel="signatureOrSystem" />
+        android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_DOWNLOAD_MANAGER" />
@@ -56,11 +57,13 @@
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher_browser"
         android:label="@string/application_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:taskAffinity="android.task.browser">
 
+        <!-- old authorities -> android:authorities="com.android.browser;browser" -->
         <provider
             android:name=".provider.BrowserProvider2"
-            android:authorities="com.android.browser;browser"
+            android:authorities="com.android.browser.compat"
             android:exported="true"
             android:multiprocess="false"
             android:readPermission="com.android.browser.permission.READ_HISTORY_BOOKMARKS"
@@ -207,7 +210,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="ComboViewActivity" />
+        <activity
+            android:name="ComboViewActivity"
+            android:theme="@style/Theme.AppCompat" />
 
         <!-- Bookmark thumbnail homescreen widget -->
         <receiver
@@ -230,7 +235,7 @@
             android:exported="false" />
         <activity
             android:name=".widget.BookmarkWidgetConfigure"
-            android:theme="@android:style/Theme.Holo.DialogWhenLarge">
+            android:theme="@style/Theme.AppCompat.DialogWhenLarge">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
@@ -284,7 +289,7 @@
             android:exported="false" />
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.android.browser-classic.file"
             android:exported="false"
             android:grantUriPermissions="true">

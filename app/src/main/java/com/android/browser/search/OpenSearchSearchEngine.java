@@ -22,8 +22,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
-import libcore.io.Streams;
-import libcore.net.http.ResponseUtils;
+import com.android.browser.util.Streams;
+import com.android.browser.util.ResponseUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 

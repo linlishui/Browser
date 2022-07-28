@@ -22,13 +22,13 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.MergeCursor;
 import android.net.Uri;
-import android.provider.BrowserContract.Bookmarks;
-import android.provider.BrowserContract.History;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 
 import com.android.browser.R;
+import com.android.browser.compat.BrowserContractCompat.Bookmarks;
+import com.android.browser.compat.BrowserContractCompat.History;
 import com.android.browser.homepages.Template.ListEntityIterator;
 
 import java.io.File;
@@ -83,12 +83,12 @@ public class RequestHandler extends Thread {
         }
         int match = sUriMatcher.match(mUri);
         switch (match) {
-        case INDEX:
-            writeTemplatedIndex();
-            break;
-        case RESOURCE:
-            writeResource(getUriResourcePath());
-            break;
+            case INDEX:
+                writeTemplatedIndex();
+                break;
+            case RESOURCE:
+                writeResource(getUriResourcePath());
+                break;
         }
     }
 
@@ -99,13 +99,14 @@ public class RequestHandler extends Thread {
     // We can reuse this for both History and Bookmarks queries because the
     // columns defined actually belong to the CommonColumn and ImageColumn
     // interfaces that both History and Bookmarks implement
-    private static final String[] PROJECTION = new String[] {
-        History.URL,
-        History.TITLE,
-        History.THUMBNAIL
+    private static final String[] PROJECTION = new String[]{
+            History.URL,
+            History.TITLE,
+            History.THUMBNAIL
     };
     private static final String SELECTION = History.URL
             + " NOT LIKE 'content:%' AND " + History.THUMBNAIL + " IS NOT NULL";
+
     void writeTemplatedIndex() throws IOException {
         Template t = Template.getCachedTemplate(mContext, R.raw.most_visited);
         Cursor historyResults = mContext.getContentResolver().query(
@@ -117,7 +118,7 @@ public class RequestHandler extends Thread {
                 Cursor bookmarkResults = mContext.getContentResolver().query(
                         Bookmarks.CONTENT_URI, PROJECTION, SELECTION,
                         null, Bookmarks.DATE_CREATED + " DESC LIMIT 12");
-                cursor = new MergeCursor(new Cursor[] { historyResults, bookmarkResults }) {
+                cursor = new MergeCursor(new Cursor[]{historyResults, bookmarkResults}) {
                     @Override
                     public int getCount() {
                         return Math.min(12, super.getCount());
@@ -184,7 +185,7 @@ public class RequestHandler extends Thread {
                 }
                 if ("last_modified".equals(key)) {
                     String date = DateFormat.getDateTimeInstance(
-                            DateFormat.SHORT, DateFormat.SHORT)
+                                    DateFormat.SHORT, DateFormat.SHORT)
                             .format(f.lastModified());
                     stream.write(date.getBytes());
                 }
@@ -214,8 +215,8 @@ public class RequestHandler extends Thread {
     }
 
     static String readableFileSize(long size) {
-        if(size <= 0) return "0";
-        final String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
+        if (size <= 0) return "0";
+        final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
         return new DecimalFormat("#,##0.#").format(
                 size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];

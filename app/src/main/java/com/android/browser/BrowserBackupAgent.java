@@ -22,8 +22,9 @@ import android.app.backup.BackupDataOutput;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.ParcelFileDescriptor;
-import android.provider.BrowserContract.Bookmarks;
 import android.util.Log;
+
+import com.android.browser.compat.BrowserContractCompat.Bookmarks;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -48,7 +49,9 @@ public class BrowserBackupAgent extends BackupAgent {
     static final boolean DEBUG = false;
 
     static final String BOOKMARK_KEY = "_bookmarks_";
-    /** this version num MUST be incremented if the flattened-file schema ever changes */
+    /**
+     * this version num MUST be incremented if the flattened-file schema ever changes
+     */
     static final int BACKUP_AGENT_VERSION = 0;
 
     /**
@@ -57,7 +60,7 @@ public class BrowserBackupAgent extends BackupAgent {
      */
     @Override
     public void onBackup(ParcelFileDescriptor oldState, BackupDataOutput data,
-            ParcelFileDescriptor newState) throws IOException {
+                         ParcelFileDescriptor newState) throws IOException {
         long savedFileSize = -1;
         long savedCrc = -1;
         int savedVersion = -1;
@@ -88,7 +91,7 @@ public class BrowserBackupAgent extends BackupAgent {
      */
     @Override
     public void onRestore(BackupDataInput data, int appVersionCode,
-            ParcelFileDescriptor newState) throws IOException {
+                          ParcelFileDescriptor newState) throws IOException {
         long crc = -1;
         File tmpfile = File.createTempFile("rst", null, getFilesDir());
         try {
@@ -121,7 +124,7 @@ public class BrowserBackupAgent extends BackupAgent {
                         int N = bookmarks.size();
                         int nUnique = 0;
                         if (DEBUG) Log.v(TAG, "Restoring " + N + " bookmarks");
-                        String[] urlCol = new String[] { Bookmarks.URL };
+                        String[] urlCol = new String[]{Bookmarks.URL};
                         for (int i = 0; i < N; i++) {
                             Bookmark mark = bookmarks.get(i);
 
@@ -129,7 +132,7 @@ public class BrowserBackupAgent extends BackupAgent {
                             Cursor cursor = getContentResolver().query(
                                     Bookmarks.CONTENT_URI, urlCol,
                                     Bookmarks.URL + " == ?",
-                                    new String[] { mark.url }, null);
+                                    new String[]{mark.url}, null);
                             // if not, insert it
                             if (cursor.getCount() <= 0) {
                                 if (DEBUG) Log.v(TAG, "Did not see url: " + mark.url);

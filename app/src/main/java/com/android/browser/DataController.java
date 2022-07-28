@@ -27,10 +27,10 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.History;
 import android.util.Log;
 
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.History;
 import com.android.browser.provider.BrowserProvider2.Thumbnails;
 
 import java.nio.ByteBuffer;
@@ -56,6 +56,7 @@ public class DataController {
     /* package */ static interface OnQueryUrlIsBookmark {
         void onQueryUrlIsBookmark(String url, boolean isBookmark);
     }
+
     private static class CallbackContainer {
         Object replyTo;
         Object[] args;
@@ -65,13 +66,15 @@ public class DataController {
         int what;
         Object obj;
         Object replyTo;
+
         DCMessage(int w, Object o) {
             what = w;
             obj = o;
         }
     }
 
-    /* package */ static DataController getInstance(Context c) {
+    /* package */
+    static DataController getInstance(Context c) {
         if (sInstance == null) {
             sInstance = new DataController(c);
         }
@@ -104,7 +107,7 @@ public class DataController {
     }
 
     public void updateHistoryTitle(String url, String title) {
-        mDataHandler.sendMessage(HISTORY_UPDATE_TITLE, new String[] { url, title });
+        mDataHandler.sendMessage(HISTORY_UPDATE_TITLE, new String[]{url, title});
     }
 
     public void queryBookmarkStatus(String url, OnQueryUrlIsBookmark replyTo) {
@@ -163,33 +166,34 @@ public class DataController {
 
         private void handleMessage(DCMessage msg) {
             switch (msg.what) {
-            case HISTORY_UPDATE_VISITED:
-                doUpdateVisitedHistory((String) msg.obj);
-                break;
-            case HISTORY_UPDATE_TITLE:
-                String[] args = (String[]) msg.obj;
-                doUpdateHistoryTitle(args[0], args[1]);
-                break;
-            case QUERY_URL_IS_BOOKMARK:
-                // TODO: Look for identical messages in the queue and remove them
-                // TODO: Also, look for partial matches and merge them (such as
-                //       multiple callbacks querying the same URL)
-                doQueryBookmarkStatus((String) msg.obj, msg.replyTo);
-                break;
-            case TAB_LOAD_THUMBNAIL:
-                doLoadThumbnail((Tab) msg.obj);
-                break;
-            case TAB_DELETE_THUMBNAIL:
-                ContentResolver cr = mContext.getContentResolver();
-                try {
-                    cr.delete(ContentUris.withAppendedId(
-                            Thumbnails.CONTENT_URI, (Long)msg.obj),
-                            null, null);
-                } catch (Throwable t) {}
-                break;
-            case TAB_SAVE_THUMBNAIL:
-                doSaveThumbnail((Tab)msg.obj);
-                break;
+                case HISTORY_UPDATE_VISITED:
+                    doUpdateVisitedHistory((String) msg.obj);
+                    break;
+                case HISTORY_UPDATE_TITLE:
+                    String[] args = (String[]) msg.obj;
+                    doUpdateHistoryTitle(args[0], args[1]);
+                    break;
+                case QUERY_URL_IS_BOOKMARK:
+                    // TODO: Look for identical messages in the queue and remove them
+                    // TODO: Also, look for partial matches and merge them (such as
+                    //       multiple callbacks querying the same URL)
+                    doQueryBookmarkStatus((String) msg.obj, msg.replyTo);
+                    break;
+                case TAB_LOAD_THUMBNAIL:
+                    doLoadThumbnail((Tab) msg.obj);
+                    break;
+                case TAB_DELETE_THUMBNAIL:
+                    ContentResolver cr = mContext.getContentResolver();
+                    try {
+                        cr.delete(ContentUris.withAppendedId(
+                                        Thumbnails.CONTENT_URI, (Long) msg.obj),
+                                null, null);
+                    } catch (Throwable t) {
+                    }
+                    break;
+                case TAB_SAVE_THUMBNAIL:
+                    doSaveThumbnail((Tab) msg.obj);
+                    break;
             }
         }
 
@@ -225,7 +229,7 @@ public class DataController {
             Cursor c = null;
             try {
                 Uri uri = ContentUris.withAppendedId(Thumbnails.CONTENT_URI, tab.getId());
-                c = cr.query(uri, new String[] {Thumbnails._ID,
+                c = cr.query(uri, new String[]{Thumbnails._ID,
                         Thumbnails.THUMBNAIL}, null, null, null);
                 if (c.moveToFirst()) {
                     byte[] data = c.getBlob(1);
@@ -244,8 +248,8 @@ public class DataController {
             ContentResolver cr = mContext.getContentResolver();
             Cursor c = null;
             try {
-                c = cr.query(History.CONTENT_URI, new String[] { History._ID, History.VISITS },
-                        History.URL + "=?", new String[] { url }, null);
+                c = cr.query(History.CONTENT_URI, new String[]{History._ID, History.VISITS},
+                        History.URL + "=?", new String[]{url}, null);
                 if (c.moveToFirst()) {
                     ContentValues values = new ContentValues();
                     values.put(History.VISITS, c.getInt(1) + 1);
@@ -275,9 +279,9 @@ public class DataController {
             try {
                 cursor = mContext.getContentResolver().query(
                         BookmarkUtils.getBookmarksUri(mContext),
-                        new String[] { BrowserContract.Bookmarks.URL },
-                        BrowserContract.Bookmarks.URL + " == ?",
-                        new String[] { url },
+                        new String[]{BrowserContractCompat.Bookmarks.URL},
+                        BrowserContractCompat.Bookmarks.URL + " == ?",
+                        new String[]{url},
                         null);
                 isBookmark = cursor.moveToFirst();
             } catch (SQLiteException e) {
@@ -287,7 +291,7 @@ public class DataController {
             }
             CallbackContainer cc = new CallbackContainer();
             cc.replyTo = replyTo;
-            cc.args = new Object[] { url, isBookmark };
+            cc.args = new Object[]{url, isBookmark};
             mCbHandler.obtainMessage(QUERY_URL_IS_BOOKMARK, cc).sendToTarget();
         }
 
@@ -296,7 +300,7 @@ public class DataController {
             ContentValues values = new ContentValues();
             values.put(History.TITLE, title);
             cr.update(History.CONTENT_URI, values, History.URL + "=?",
-                    new String[] { url });
+                    new String[]{url});
         }
     }
 }

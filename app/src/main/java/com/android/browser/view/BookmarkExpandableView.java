@@ -18,7 +18,7 @@ package com.android.browser.view;
 
 import android.content.Context;
 import android.database.DataSetObserver;
-import android.provider.BrowserContract;
+import com.android.browser.compat.BrowserContractCompat;
 import android.util.AttributeSet;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -423,7 +423,7 @@ public class BookmarkExpandableView extends ExpandableListView
                 crumbs.setMaxVisible(2);
                 String bookmarks = mContext.getString(R.string.bookmarks);
                 crumbs.pushView(bookmarks, false,
-                        BrowserContract.Bookmarks.CONTENT_URI_DEFAULT_FOLDER);
+                        BrowserContractCompat.Bookmarks.CONTENT_URI_DEFAULT_FOLDER);
                 crumbs.setTag(R.id.group_position, groupPosition);
                 crumbs.setVisibility(View.GONE);
                 mBreadcrumbs.put(groupPosition, crumbs);

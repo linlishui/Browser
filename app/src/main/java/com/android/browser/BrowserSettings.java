@@ -59,26 +59,26 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
 
     // TODO: Do something with this UserAgent stuff
     private static final String DESKTOP_USERAGENT = "Mozilla/5.0 (X11; " +
-        "Linux x86_64) AppleWebKit/534.24 (KHTML, like Gecko) " +
-        "Chrome/11.0.696.34 Safari/534.24";
+            "Linux x86_64) AppleWebKit/534.24 (KHTML, like Gecko) " +
+            "Chrome/11.0.696.34 Safari/534.24";
 
     private static final String IPHONE_USERAGENT = "Mozilla/5.0 (iPhone; U; " +
-        "CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 " +
-        "(KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7";
+            "CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 " +
+            "(KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7";
 
     private static final String IPAD_USERAGENT = "Mozilla/5.0 (iPad; U; " +
-        "CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 " +
-        "(KHTML, like Gecko) Version/4.0.4 Mobile/7B367 Safari/531.21.10";
+            "CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 " +
+            "(KHTML, like Gecko) Version/4.0.4 Mobile/7B367 Safari/531.21.10";
 
     private static final String FROYO_USERAGENT = "Mozilla/5.0 (Linux; U; " +
-        "Android 2.2; en-us; Nexus One Build/FRF91) AppleWebKit/533.1 " +
-        "(KHTML, like Gecko) Version/4.0 Mobile Safari/533.1";
+            "Android 2.2; en-us; Nexus One Build/FRF91) AppleWebKit/533.1 " +
+            "(KHTML, like Gecko) Version/4.0 Mobile Safari/533.1";
 
     private static final String HONEYCOMB_USERAGENT = "Mozilla/5.0 (Linux; U; " +
-        "Android 3.1; en-us; Xoom Build/HMJ25) AppleWebKit/534.13 " +
-        "(KHTML, like Gecko) Version/4.0 Safari/534.13";
+            "Android 3.1; en-us; Xoom Build/HMJ25) AppleWebKit/534.13 " +
+            "(KHTML, like Gecko) Version/4.0 Safari/534.13";
 
-    private static final String USER_AGENTS[] = { null,
+    private static final String USER_AGENTS[] = {null,
             DESKTOP_USERAGENT,
             IPHONE_USERAGENT,
             IPAD_USERAGENT,
@@ -172,7 +172,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
         }
     }
 
-    private Runnable mSetup = new Runnable() {
+    private final Runnable mSetup = new Runnable() {
 
         @Override
         public void run() {
@@ -203,18 +203,18 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
                  * LARGEST is 200%
                  */
                 switch (getTextSize()) {
-                case SMALLEST:
-                    setTextZoom(50);
-                    break;
-                case SMALLER:
-                    setTextZoom(75);
-                    break;
-                case LARGER:
-                    setTextZoom(150);
-                    break;
-                case LARGEST:
-                    setTextZoom(200);
-                    break;
+                    case SMALLEST:
+                        setTextZoom(50);
+                        break;
+                    case SMALLER:
+                        setTextZoom(75);
+                        break;
+                    case LARGER:
+                        setTextZoom(150);
+                        break;
+                    case LARGEST:
+                        setTextZoom(200);
+                        break;
                 }
                 mPrefs.edit().remove(PREF_TEXT_SIZE).apply();
             }
@@ -222,7 +222,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
             sFactoryResetUrl = mContext.getResources().getString(R.string.homepage_base);
             if (sFactoryResetUrl.indexOf("{CID}") != -1) {
                 sFactoryResetUrl = sFactoryResetUrl.replace("{CID}",
-                    BrowserProvider.getClientId(mContext.getContentResolver()));
+                        BrowserProvider.getClientId(mContext.getContentResolver()));
             }
 
             synchronized (BrowserSettings.class) {
@@ -238,6 +238,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
                 try {
                     BrowserSettings.class.wait();
                 } catch (InterruptedException e) {
+                    // no-op
                 }
             }
         }
@@ -397,7 +398,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
         if (force || mSearchEngine == null ||
                 !mSearchEngine.getName().equals(searchEngineName)) {
             mSearchEngine = SearchEngines.get(mContext, searchEngineName);
-         }
+        }
     }
 
     public SearchEngine getSearchEngine() {
@@ -409,7 +410,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
 
     public boolean isDebugEnabled() {
         requireInitialization();
-        return mPrefs.getBoolean(PREF_DEBUG_MENU, false);
+        return mPrefs.getBoolean(PREF_DEBUG_MENU, BuildConfig.DEBUG);
     }
 
     public void setDebugEnabled(boolean value) {
@@ -444,7 +445,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
 
     public void clearFormData() {
         WebViewDatabase.getInstance(mContext).clearFormData();
-        if (mController!= null) {
+        if (mController != null) {
             WebView currentTopView = mController.getCurrentTopWebView();
             if (currentTopView != null) {
                 currentTopView.clearFormData();
@@ -536,10 +537,10 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
     // update connectivity-dependent options
     public void updateConnectionType() {
         ConnectivityManager cm = (ConnectivityManager)
-            mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+                mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         String linkPrefetchPreference = getLinkPrefetchEnabled();
         boolean linkPrefetchAllowed = linkPrefetchPreference.
-            equals(getLinkPrefetchAlwaysPreferenceString(mContext));
+                equals(getLinkPrefetchAlwaysPreferenceString(mContext));
         NetworkInfo ni = cm.getActiveNetworkInfo();
         if (ni != null) {
             switch (ni.getType()) {
@@ -547,7 +548,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
                 case ConnectivityManager.TYPE_ETHERNET:
                 case ConnectivityManager.TYPE_BLUETOOTH:
                     linkPrefetchAllowed |= linkPrefetchPreference.
-                        equals(getLinkPrefetchOnWifiOnlyPreferenceString(mContext));
+                            equals(getLinkPrefetchOnWifiOnlyPreferenceString(mContext));
                     break;
                 case ConnectivityManager.TYPE_MOBILE:
                 case ConnectivityManager.TYPE_MOBILE_DUN:
@@ -856,7 +857,7 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
 
     public String getDefaultLinkPrefetchSetting() {
         String preload = Settings.Secure.getString(mContext.getContentResolver(),
-            DEFAULT_LINK_PREFETCH_SECURE_SETTING_KEY);
+                DEFAULT_LINK_PREFETCH_SECURE_SETTING_KEY);
         if (preload == null) {
             preload = mContext.getResources().getString(R.string.pref_link_prefetch_default_value);
         }
@@ -870,8 +871,10 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
     // -----------------------------
     // getter/setters for browser recovery
     // -----------------------------
+
     /**
      * The last time browser was started.
+     *
      * @return The last browser start time as System.currentTimeMillis. This
      * can be 0 if this is the first time or the last tab was closed.
      */
@@ -881,19 +884,21 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
 
     /**
      * Sets the last browser start time.
+     *
      * @param time The last time as System.currentTimeMillis that the browser
-     * was started. This should be set to 0 if the last tab is closed.
+     *             was started. This should be set to 0 if the last tab is closed.
      */
     public void setLastRecovered(long time) {
         mPrefs.edit()
-            .putLong(KEY_LAST_RECOVERED, time)
-            .apply();
+                .putLong(KEY_LAST_RECOVERED, time)
+                .apply();
     }
 
     /**
      * Used to determine whether or not the previous browser run crashed. Once
      * the previous state has been determined, the value will be set to false
      * until a pause is received.
+     *
      * @return true if the last browser run was paused or false if it crashed.
      */
     public boolean wasLastRunPaused() {
@@ -902,12 +907,13 @@ public class BrowserSettings implements OnSharedPreferenceChangeListener,
 
     /**
      * Sets whether or not the last run was a pause or crash.
+     *
      * @param isPaused Set to true When a pause is received or false after
-     * resuming.
+     *                 resuming.
      */
     public void setLastRunPaused(boolean isPaused) {
         mPrefs.edit()
-            .putBoolean(KEY_LAST_RUN_PAUSED, isPaused)
-            .apply();
+                .putBoolean(KEY_LAST_RUN_PAUSED, isPaused)
+                .apply();
     }
 }

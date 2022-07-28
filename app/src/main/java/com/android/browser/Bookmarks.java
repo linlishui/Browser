@@ -26,23 +26,24 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Combined;
-import android.provider.BrowserContract.Images;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.WebIconDatabase;
 import android.widget.Toast;
 
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Combined;
+import com.android.browser.compat.BrowserContractCompat.Images;
+
 import java.io.ByteArrayOutputStream;
 
 /**
- *  This class is purely to have a common place for adding/deleting bookmarks.
+ * This class is purely to have a common place for adding/deleting bookmarks.
  */
 public class Bookmarks {
     // We only want the user to be able to bookmark content that
     // the browser can handle directly.
-    private static final String acceptableBookmarkSchemes[] = {
+    private static final String acceptableBookmarkSchemes[] = new String[]{
             "http:",
             "https:",
             "about:",
@@ -53,32 +54,32 @@ public class Bookmarks {
     };
 
     private final static String LOGTAG = "Bookmarks";
+
     /**
-     *  Add a bookmark to the database.
-     *  @param context Context of the calling Activity.  This is used to make
-     *          Toast confirming that the bookmark has been added.  If the
-     *          caller provides null, the Toast will not be shown.
-     *  @param url URL of the website to be bookmarked.
-     *  @param name Provided name for the bookmark.
-     *  @param thumbnail A thumbnail for the bookmark.
-     *  @param retainIcon Whether to retain the page's icon in the icon database.
-     *          This will usually be <code>true</code> except when bookmarks are
-     *          added by a settings restore agent.
-     *  @param parent ID of the parent folder.
+     * Add a bookmark to the database.
+     *
+     * @param context    Context of the calling Activity.  This is used to make
+     *                   Toast confirming that the bookmark has been added.  If the
+     *                   caller provides null, the Toast will not be shown.
+     * @param url        URL of the website to be bookmarked.
+     * @param name       Provided name for the bookmark.
+     * @param thumbnail  A thumbnail for the bookmark.
+     * @param parent     ID of the parent folder.
      */
-    /* package */ static void addBookmark(Context context, boolean showToast, String url,
-            String name, Bitmap thumbnail, long parent) {
+    /* package */
+    static void addBookmark(Context context, boolean showToast, String url,
+                            String name, Bitmap thumbnail, long parent) {
         // Want to append to the beginning of the list
         ContentValues values = new ContentValues();
         try {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            values.put(BrowserContract.Bookmarks.TITLE, name);
-            values.put(BrowserContract.Bookmarks.URL, url);
-            values.put(BrowserContract.Bookmarks.IS_FOLDER, 0);
-            values.put(BrowserContract.Bookmarks.THUMBNAIL,
+            values.put(BrowserContractCompat.Bookmarks.TITLE, name);
+            values.put(BrowserContractCompat.Bookmarks.URL, url);
+            values.put(BrowserContractCompat.Bookmarks.IS_FOLDER, 0);
+            values.put(BrowserContractCompat.Bookmarks.THUMBNAIL,
                     bitmapToBytes(thumbnail));
-            values.put(BrowserContract.Bookmarks.PARENT, parent);
-            context.getContentResolver().insert(BrowserContract.Bookmarks.CONTENT_URI, values);
+            values.put(BrowserContractCompat.Bookmarks.PARENT, parent);
+            context.getContentResolver().insert(BrowserContractCompat.Bookmarks.CONTENT_URI, values);
         } catch (IllegalStateException e) {
             Log.e(LOGTAG, "addBookmark", e);
         }
@@ -89,25 +90,27 @@ public class Bookmarks {
     }
 
     /**
-     *  Remove a bookmark from the database.  If the url is a visited site, it
-     *  will remain in the database, but only as a history item, and not as a
-     *  bookmarked site.
-     *  @param context Context of the calling Activity.  This is used to make
-     *          Toast confirming that the bookmark has been removed and to
-     *          lookup the correct content uri.  It must not be null.
-     *  @param cr The ContentResolver being used to remove the bookmark.
-     *  @param url URL of the website to be removed.
+     * Remove a bookmark from the database.  If the url is a visited site, it
+     * will remain in the database, but only as a history item, and not as a
+     * bookmarked site.
+     *
+     * @param context Context of the calling Activity.  This is used to make
+     *                Toast confirming that the bookmark has been removed and to
+     *                lookup the correct content uri.  It must not be null.
+     * @param cr      The ContentResolver being used to remove the bookmark.
+     * @param url     URL of the website to be removed.
      */
-    /* package */ static void removeFromBookmarks(Context context,
-            ContentResolver cr, String url, String title) {
+    /* package */
+    static void removeFromBookmarks(Context context,
+                                    ContentResolver cr, String url, String title) {
         Cursor cursor = null;
         try {
             Uri uri = BookmarkUtils.getBookmarksUri(context);
             cursor = cr.query(uri,
-                    new String[] { BrowserContract.Bookmarks._ID },
-                    BrowserContract.Bookmarks.URL + " = ? AND " +
-                            BrowserContract.Bookmarks.TITLE + " = ?",
-                    new String[] { url, title },
+                    new String[]{BrowserContractCompat.Bookmarks._ID},
+                    BrowserContractCompat.Bookmarks.URL + " = ? AND " +
+                            BrowserContractCompat.Bookmarks.TITLE + " = ?",
+                    new String[]{url, title},
                     null);
 
             if (!cursor.moveToFirst()) {
@@ -116,7 +119,7 @@ public class Bookmarks {
 
             // Remove from bookmarks
             WebIconDatabase.getInstance().releaseIconForPageUrl(url);
-            uri = ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI,
+            uri = ContentUris.withAppendedId(BrowserContractCompat.Bookmarks.CONTENT_URI,
                     cursor.getLong(0));
             cr.delete(uri, null, null);
             if (context != null) {
@@ -140,7 +143,8 @@ public class Bookmarks {
         return os.toByteArray();
     }
 
-    /* package */ static boolean urlHasAcceptableScheme(String url) {
+    /* package */
+    static boolean urlHasAcceptableScheme(String url) {
         if (url == null) {
             return false;
         }
@@ -155,24 +159,24 @@ public class Bookmarks {
 
     static final String QUERY_BOOKMARKS_WHERE =
             Combined.URL + " == ? OR " +
-            Combined.URL + " == ?";
+                    Combined.URL + " == ?";
 
     public static Cursor queryCombinedForUrl(ContentResolver cr,
-            String originalUrl, String url) {
+                                             String originalUrl, String url) {
         if (cr == null || url == null) {
             return null;
         }
-    
+
         // If originalUrl is null, just set it to url.
         if (originalUrl == null) {
             originalUrl = url;
         }
-    
+
         // Look for both the original url and the actual url. This takes in to
         // account redirects.
-    
-        final String[] selArgs = new String[] { originalUrl, url };
-        final String[] projection = new String[] { Combined.URL };
+
+        final String[] selArgs = new String[]{originalUrl, url};
+        final String[] projection = new String[]{Combined.URL};
         return cr.query(Combined.CONTENT_URI, projection, QUERY_BOOKMARKS_WHERE, selArgs, null);
     }
 
@@ -192,13 +196,15 @@ public class Bookmarks {
     /**
      * Update the bookmark's favicon. This is a convenience method for updating
      * a bookmark favicon for the originalUrl and url of the passed in WebView.
-     * @param cr The ContentResolver to use.
+     *
+     * @param cr          The ContentResolver to use.
      * @param originalUrl The original url before any redirects.
-     * @param url The current url.
-     * @param favicon The favicon bitmap to write to the db.
+     * @param url         The current url.
+     * @param favicon     The favicon bitmap to write to the db.
      */
-    /* package */ static void updateFavicon(final ContentResolver cr,
-            final String originalUrl, final String url, final Bitmap favicon) {
+    /* package */
+    static void updateFavicon(final ContentResolver cr,
+                              final String originalUrl, final String url, final Bitmap favicon) {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... unused) {
@@ -214,11 +220,11 @@ public class Bookmarks {
             }
 
             private void updateImages(final ContentResolver cr,
-                    final String url, ContentValues values) {
+                                      final String url, ContentValues values) {
                 String iurl = removeQuery(url);
                 if (!TextUtils.isEmpty(iurl)) {
                     values.put(Images.URL, iurl);
-                    cr.update(BrowserContract.Images.CONTENT_URI, values, null, null);
+                    cr.update(BrowserContractCompat.Images.CONTENT_URI, values, null, null);
                 }
             }
         }.execute();

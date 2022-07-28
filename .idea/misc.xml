@@ -3,7 +3,18 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/add_tab_selector.xml" value="0.466" />
+        <entry key="app/src/main/res/drawable/bookmark_list_favicon_bg.xml" value="0.466" />
+        <entry key="app/src/main/res/drawable/bookmark_thumb_selector.xml" value="0.466" />
+        <entry key="app/src/main/res/drawable/tab_nr.xml" value="0.466" />
+        <entry key="app/src/main/res/layout/bookmarkthumbnailwidget_item_folder.xml" value="0.465625" />
+        <entry key="app/src/main/res/layout/preference_list_content.xml" value="0.465625" />
+        <entry key="app/src/main/res/layout/ssl_warning.xml" value="0.465625" />
+        <entry key="app/src/main/res/layout/title_bar_nav.xml" value="0.24010416666666667" />
         <entry key="app/src/main/res/layout/webview_preview.xml" value="0.465625" />
+        <entry key="app/src/main/res/menu-sw600dp/combined.xml" value="0.34921875" />
+        <entry key="app/src/main/res/menu/combined.xml" value="0.465625" />
+        <entry key="app/src/main/res/xml/debug_preferences.xml" value="0.465625" />
       </map>
     </option>
   </component>

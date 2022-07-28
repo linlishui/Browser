@@ -17,11 +17,15 @@
 package com.android.browser;
 
 import android.content.Context;
-import android.content.CursorLoader;
 import android.net.Uri;
-import android.provider.BrowserContract.Bookmarks;
+
+import androidx.loader.content.CursorLoader;
+
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Bookmarks;
 
 public class BookmarksLoader extends CursorLoader {
+
     public static final String ARG_ACCOUNT_TYPE = "acct_type";
     public static final String ARG_ACCOUNT_NAME = "acct_name";
 
@@ -35,24 +39,30 @@ public class BookmarksLoader extends CursorLoader {
     public static final int COLUMN_INDEX_PARENT = 8;
     public static final int COLUMN_INDEX_TYPE = 9;
 
-    public static final String[] PROJECTION = new String[] {
-        Bookmarks._ID, // 0
-        Bookmarks.URL, // 1
-        Bookmarks.TITLE, // 2
-        Bookmarks.FAVICON, // 3
-        Bookmarks.THUMBNAIL, // 4
-        Bookmarks.TOUCH_ICON, // 5
-        Bookmarks.IS_FOLDER, // 6
-        Bookmarks.POSITION, // 7
-        Bookmarks.PARENT, // 8
-        Bookmarks.TYPE, // 9
+    public static final String[] PROJECTION = new String[]{
+            Bookmarks._ID, // 0
+            Bookmarks.URL, // 1
+            Bookmarks.TITLE, // 2
+            Bookmarks.FAVICON, // 3
+            Bookmarks.THUMBNAIL, // 4
+            Bookmarks.TOUCH_ICON, // 5
+            Bookmarks.IS_FOLDER, // 6
+            Bookmarks.POSITION, // 7
+            Bookmarks.PARENT, // 8
+            Bookmarks.TYPE, // 9
     };
 
     String mAccountType;
     String mAccountName;
 
+    private final static Uri sBookmarkFolderUri = Uri.withAppendedPath(
+            Uri.withAppendedPath(BrowserContractCompat.AUTHORITY_URI, "bookmarks"),
+            "folder"
+    );
+
     public BookmarksLoader(Context context, String accountType, String accountName) {
-        super(context, addAccount(Bookmarks.CONTENT_URI_DEFAULT_FOLDER, accountType, accountName),
+        // Bookmarks.CONTENT_URI_DEFAULT_FOLDER
+        super(context, addAccount(sBookmarkFolderUri, accountType, accountName),
                 PROJECTION, null, null, null);
         mAccountType = accountType;
         mAccountName = accountName;

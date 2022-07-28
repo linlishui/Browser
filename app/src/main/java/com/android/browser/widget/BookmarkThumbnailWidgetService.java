@@ -29,8 +29,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.net.Uri;
 import android.os.Binder;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Bookmarks;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -38,6 +36,8 @@ import android.widget.RemoteViewsService;
 
 import com.android.browser.BrowserActivity;
 import com.android.browser.R;
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Bookmarks;
 import com.android.browser.provider.BrowserProvider2;
 
 import java.io.File;
@@ -55,15 +55,15 @@ public class BookmarkThumbnailWidgetService extends RemoteViewsService {
     static final String STATE_CURRENT_FOLDER = "current_folder";
     static final String STATE_ROOT_FOLDER = "root_folder";
 
-    private static final String[] PROJECTION = new String[] {
-            BrowserContract.Bookmarks._ID,
-            BrowserContract.Bookmarks.TITLE,
-            BrowserContract.Bookmarks.URL,
-            BrowserContract.Bookmarks.FAVICON,
-            BrowserContract.Bookmarks.IS_FOLDER,
-            BrowserContract.Bookmarks.POSITION, /* needed for order by */
-            BrowserContract.Bookmarks.THUMBNAIL,
-            BrowserContract.Bookmarks.PARENT};
+    private static final String[] PROJECTION = new String[]{
+            BrowserContractCompat.Bookmarks._ID,
+            BrowserContractCompat.Bookmarks.TITLE,
+            BrowserContractCompat.Bookmarks.URL,
+            BrowserContractCompat.Bookmarks.FAVICON,
+            BrowserContractCompat.Bookmarks.IS_FOLDER,
+            BrowserContractCompat.Bookmarks.POSITION, /* needed for order by */
+            BrowserContractCompat.Bookmarks.THUMBNAIL,
+            BrowserContractCompat.Bookmarks.PARENT};
     private static final int BOOKMARK_INDEX_ID = 0;
     private static final int BOOKMARK_INDEX_TITLE = 1;
     private static final int BOOKMARK_INDEX_URL = 2;
@@ -112,13 +112,13 @@ public class BookmarkThumbnailWidgetService extends RemoteViewsService {
     static void setupWidgetState(Context context, int widgetId, long rootFolder) {
         SharedPreferences pref = getWidgetState(context, widgetId);
         pref.edit()
-            .putLong(STATE_CURRENT_FOLDER, rootFolder)
-            .putLong(STATE_ROOT_FOLDER, rootFolder)
-            .apply();
+                .putLong(STATE_CURRENT_FOLDER, rootFolder)
+                .putLong(STATE_ROOT_FOLDER, rootFolder)
+                .apply();
     }
 
     /**
-     *  Checks for any state files that may have not received onDeleted
+     * Checks for any state files that may have not received onDeleted
      */
     static void removeOrphanedStates(Context context, int[] widgetIds) {
         File prefsDirectory = context.getSharedPrefsFile("null").getParentFile();
@@ -189,9 +189,9 @@ public class BookmarkThumbnailWidgetService extends RemoteViewsService {
                 mPreferences = getWidgetState(mContext, mWidgetId);
             }
             mPreferences.edit()
-                .putLong(STATE_CURRENT_FOLDER, mCurrentFolder)
-                .putLong(STATE_ROOT_FOLDER, mRootFolder)
-                .commit();
+                    .putLong(STATE_CURRENT_FOLDER, mCurrentFolder)
+                    .putLong(STATE_ROOT_FOLDER, mRootFolder)
+                    .commit();
         }
 
         @Override
@@ -247,14 +247,16 @@ public class BookmarkThumbnailWidgetService extends RemoteViewsService {
                     views.setImageViewResource(R.id.thumb, R.drawable.thumb_bookmark_widget_folder_holo);
                 }
                 views.setImageViewResource(R.id.favicon, R.drawable.ic_bookmark_widget_bookmark_holo_dark);
-                views.setDrawableParameters(R.id.thumb, true, 0, -1, null, -1);
+                // fixme: RemoteViews.setDrawableParameters() method lost in high api
+                //views.setDrawableParameters(R.id.thumb, true, 0, -1, null, -1);
             } else {
                 // RemoteViews require a valid bitmap config
                 Options options = new Options();
                 options.inPreferredConfig = Config.ARGB_8888;
-                Bitmap thumbnail = null, favicon = null;
+                Bitmap favicon = null;
+                Bitmap thumbnail = null;
                 byte[] blob = mBookmarks.getBlob(BOOKMARK_INDEX_THUMBNAIL);
-                views.setDrawableParameters(R.id.thumb, true, 255, -1, null, -1);
+                //views.setDrawableParameters(R.id.thumb, true, 255, -1, null, -1);
                 if (blob != null && blob.length > 0) {
                     thumbnail = BitmapFactory.decodeByteArray(
                             blob, 0, blob.length, options);
@@ -339,17 +341,16 @@ public class BookmarkThumbnailWidgetService extends RemoteViewsService {
             resetBookmarks();
 
             Uri uri = ContentUris.withAppendedId(
-                    BrowserContract.Bookmarks.CONTENT_URI_DEFAULT_FOLDER,
-                    mCurrentFolder);
+                    BrowserContractCompat.Bookmarks.CONTENT_URI_DEFAULT_FOLDER, mCurrentFolder);
             mBookmarks = mContext.getContentResolver().query(uri, PROJECTION,
                     null, null, null);
             if (mCurrentFolder != mRootFolder) {
                 uri = ContentUris.withAppendedId(
-                        BrowserContract.Bookmarks.CONTENT_URI,
+                        BrowserContractCompat.Bookmarks.CONTENT_URI,
                         mCurrentFolder);
                 Cursor c = mContext.getContentResolver().query(uri, PROJECTION,
                         null, null, null);
-                mBookmarks = new MergeCursor(new Cursor[] { c, mBookmarks });
+                mBookmarks = new MergeCursor(new Cursor[]{c, mBookmarks});
             }
         }
     }

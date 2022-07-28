@@ -17,15 +17,11 @@
 package com.android.browser;
 
 import android.app.Activity;
-import android.app.Fragment;
-import android.app.LoaderManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -36,8 +32,6 @@ import android.graphics.BitmapFactory.Options;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Accounts;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -49,6 +43,15 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Accounts;
 import com.android.browser.provider.BrowserProvider2;
 import com.android.browser.view.BookmarkExpandableView;
 import com.android.browser.view.BookmarkExpandableView.BookmarkContextMenuInfo;
@@ -61,12 +64,13 @@ import java.util.HashMap;
 interface BookmarksPageCallbacks {
     // Return true if handled
     boolean onBookmarkSelected(Cursor c, boolean isFolder);
+
     // Return true if handled
     boolean onOpenInNewWindow(String... urls);
 }
 
 /**
- *  View showing the user's bookmarks in the browser.
+ * View showing the user's bookmarks in the browser.
  */
 public class BrowserBookmarksPage extends Fragment implements View.OnCreateContextMenuListener,
         LoaderManager.LoaderCallbacks<Cursor>, BreadCrumbView.Controller,
@@ -98,23 +102,23 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
     HashMap<Integer, BrowserBookmarksAdapter> mBookmarkAdapters = new HashMap<Integer, BrowserBookmarksAdapter>();
     JSONObject mState;
 
+    @NonNull
     @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
         if (id == LOADER_ACCOUNTS) {
             return new AccountsLoader(getActivity());
         } else if (id >= LOADER_BOOKMARKS) {
             String accountType = args.getString(ACCOUNT_TYPE);
             String accountName = args.getString(ACCOUNT_NAME);
-            BookmarksLoader bl = new BookmarksLoader(getActivity(),
+            return new BookmarksLoader(getActivity(),
                     accountType, accountName);
-            return bl;
         } else {
             throw new UnsupportedOperationException("Unknown loader id " + id);
         }
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+    public void onLoadFinished(@NonNull androidx.loader.content.Loader<Cursor> loader, Cursor cursor) {
         if (loader.getId() == LOADER_ACCOUNTS) {
             LoaderManager lm = getLoaderManager();
             int id = LOADER_BOOKMARKS;
@@ -131,7 +135,8 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
                 try {
                     expand = mState.getBoolean(accountName != null ? accountName
                             : BookmarkExpandableView.LOCAL_ACCOUNT_NAME);
-                } catch (JSONException e) {} // no state for accountName
+                } catch (JSONException e) {
+                } // no state for accountName
                 mGrid.addAccount(accountName, adapter, expand);
                 lm.restartLoader(id, args, this);
                 id++;
@@ -151,7 +156,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull androidx.loader.content.Loader<Cursor> loader) {
         if (loader.getId() >= LOADER_BOOKMARKS) {
             BrowserBookmarksAdapter adapter = mBookmarkAdapters.get(loader.getId());
             adapter.changeCursor(null);
@@ -176,56 +181,56 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
     }
 
     public boolean handleContextItem(int itemId, int groupPosition,
-            int childPosition) {
+                                     int childPosition) {
         final Activity activity = getActivity();
         BrowserBookmarksAdapter adapter = getChildAdapter(groupPosition);
 
         switch (itemId) {
-        case R.id.open_context_menu_id:
-            loadUrl(adapter, childPosition);
-            break;
-        case R.id.edit_context_menu_id:
-            editBookmark(adapter, childPosition);
-            break;
-        case R.id.shortcut_context_menu_id:
-            Cursor c = adapter.getItem(childPosition);
-            activity.sendBroadcast(createShortcutIntent(getActivity(), c));
-            break;
-        case R.id.delete_context_menu_id:
-            displayRemoveBookmarkDialog(adapter, childPosition);
-            break;
-        case R.id.new_window_context_menu_id:
-            openInNewWindow(adapter, childPosition);
-            break;
-        case R.id.share_link_context_menu_id: {
-            Cursor cursor = adapter.getItem(childPosition);
-            Controller.sharePage(activity,
-                    cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE),
-                    cursor.getString(BookmarksLoader.COLUMN_INDEX_URL),
-                    getBitmap(cursor, BookmarksLoader.COLUMN_INDEX_FAVICON),
-                    getBitmap(cursor, BookmarksLoader.COLUMN_INDEX_THUMBNAIL));
-            break;
-        }
-        case R.id.copy_url_context_menu_id:
-            copy(getUrl(adapter, childPosition));
-            break;
-        case R.id.homepage_context_menu_id: {
-            BrowserSettings.getInstance().setHomePage(getUrl(adapter, childPosition));
-            Toast.makeText(activity, R.string.homepage_set, Toast.LENGTH_LONG).show();
-            break;
-        }
-        // Only for the Most visited page
-        case R.id.save_to_bookmarks_menu_id: {
-            Cursor cursor = adapter.getItem(childPosition);
-            String name = cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE);
-            String url = cursor.getString(BookmarksLoader.COLUMN_INDEX_URL);
-            // If the site is bookmarked, the item becomes remove from
-            // bookmarks.
-            Bookmarks.removeFromBookmarks(activity, activity.getContentResolver(), url, name);
-            break;
-        }
-        default:
-            return false;
+            case R.id.open_context_menu_id:
+                loadUrl(adapter, childPosition);
+                break;
+            case R.id.edit_context_menu_id:
+                editBookmark(adapter, childPosition);
+                break;
+            case R.id.shortcut_context_menu_id:
+                Cursor c = adapter.getItem(childPosition);
+                activity.sendBroadcast(createShortcutIntent(getActivity(), c));
+                break;
+            case R.id.delete_context_menu_id:
+                displayRemoveBookmarkDialog(adapter, childPosition);
+                break;
+            case R.id.new_window_context_menu_id:
+                openInNewWindow(adapter, childPosition);
+                break;
+            case R.id.share_link_context_menu_id: {
+                Cursor cursor = adapter.getItem(childPosition);
+                Controller.sharePage(activity,
+                        cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE),
+                        cursor.getString(BookmarksLoader.COLUMN_INDEX_URL),
+                        getBitmap(cursor, BookmarksLoader.COLUMN_INDEX_FAVICON),
+                        getBitmap(cursor, BookmarksLoader.COLUMN_INDEX_THUMBNAIL));
+                break;
+            }
+            case R.id.copy_url_context_menu_id:
+                copy(getUrl(adapter, childPosition));
+                break;
+            case R.id.homepage_context_menu_id: {
+                BrowserSettings.getInstance().setHomePage(getUrl(adapter, childPosition));
+                Toast.makeText(activity, R.string.homepage_set, Toast.LENGTH_LONG).show();
+                break;
+            }
+            // Only for the Most visited page
+            case R.id.save_to_bookmarks_menu_id: {
+                Cursor cursor = adapter.getItem(childPosition);
+                String name = cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE);
+                String url = cursor.getString(BookmarksLoader.COLUMN_INDEX_URL);
+                // If the site is bookmarked, the item becomes remove from
+                // bookmarks.
+                Bookmarks.removeFromBookmarks(activity, activity.getContentResolver(), url, name);
+                break;
+            }
+            default:
+                return false;
         }
         return true;
     }
@@ -238,8 +243,11 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         @Override
         protected Options initialValue() {
             return new Options();
-        };
+        }
+
+        ;
     };
+
     static Bitmap getBitmap(Cursor cursor, int columnIndex, Bitmap inBitmap) {
         byte[] data = cursor.getBlob(columnIndex);
         if (data == null) {
@@ -257,8 +265,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         }
     }
 
-    private MenuItem.OnMenuItemClickListener mContextItemClickListener =
-            new MenuItem.OnMenuItemClickListener() {
+    private MenuItem.OnMenuItemClickListener mContextItemClickListener = new MenuItem.OnMenuItemClickListener() {
         @Override
         public boolean onMenuItemClick(MenuItem item) {
             return onContextItemSelected(item);
@@ -300,8 +307,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
 
     boolean canEdit(Cursor c) {
         int type = c.getInt(BookmarksLoader.COLUMN_INDEX_TYPE);
-        return type == BrowserContract.Bookmarks.BOOKMARK_TYPE_BOOKMARK
-                || type == BrowserContract.Bookmarks.BOOKMARK_TYPE_FOLDER;
+        return type == BrowserContractCompat.Bookmarks.BOOKMARK_TYPE_BOOKMARK || type == BrowserContractCompat.Bookmarks.BOOKMARK_TYPE_FOLDER;
     }
 
     private void populateBookmarkItem(Cursor cursor, BookmarkItem item, boolean isFolder) {
@@ -309,7 +315,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         if (isFolder) {
             item.setUrl(null);
             Bitmap bitmap =
-                BitmapFactory.decodeResource(getResources(), R.drawable.ic_folder_holo_dark);
+                    BitmapFactory.decodeResource(getResources(), R.drawable.ic_folder_holo_dark);
             item.setFavicon(bitmap);
             new LookupBookmarkCount(getActivity(), item)
                     .execute(cursor.getLong(BookmarksLoader.COLUMN_INDEX_ID));
@@ -322,7 +328,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
     }
 
     /**
-     *  Create a new BrowserBookmarksPage.
+     * Create a new BrowserBookmarksPage.
      */
     @Override
     public void onCreate(Bundle icicle) {
@@ -382,11 +388,13 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
             mCombinedCallback.openUrl(BrowserBookmarksPage.getUrl(c));
             return true;
         }
-    };
+    }
+
+    ;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         mRoot = inflater.inflate(R.layout.bookmarks, container, false);
         mEmptyView = mRoot.findViewById(android.R.id.empty);
 
@@ -426,7 +434,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
 
     @Override
     public boolean onChildClick(ExpandableListView parent, View v,
-            int groupPosition, int childPosition, long id) {
+                                int groupPosition, int childPosition, long id) {
         BrowserBookmarksAdapter adapter = getChildAdapter(groupPosition);
         Cursor cursor = adapter.getItem(childPosition);
         boolean isFolder = cursor.getInt(BookmarksLoader.COLUMN_INDEX_IS_FOLDER) != 0;
@@ -438,7 +446,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         if (isFolder) {
             String title = cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE);
             Uri uri = ContentUris.withAppendedId(
-                    BrowserContract.Bookmarks.CONTENT_URI_DEFAULT_FOLDER, id);
+                    BrowserContractCompat.Bookmarks.CONTENT_URI_DEFAULT_FOLDER, id);
             BreadCrumbView crumbs = getBreadCrumbs(groupPosition);
             if (crumbs != null) {
                 // update crumbs
@@ -450,7 +458,8 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         return true;
     }
 
-    /* package */ static Intent createShortcutIntent(Context context, Cursor cursor) {
+    /* package */
+    static Intent createShortcutIntent(Context context, Cursor cursor) {
         String url = cursor.getString(BookmarksLoader.COLUMN_INDEX_URL);
         String title = cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE);
         Bitmap touchIcon = getBitmap(cursor, BookmarksLoader.COLUMN_INDEX_TOUCH_ICON);
@@ -479,6 +488,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
 
     class OpenAllInTabsTask extends AsyncTask<Void, Void, Cursor> {
         long mFolderId;
+
         public OpenAllInTabsTask(long id) {
             mFolderId = id;
         }
@@ -488,8 +498,8 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
             Context c = getActivity();
             if (c == null) return null;
             return c.getContentResolver().query(BookmarkUtils.getBookmarksUri(c),
-                    BookmarksLoader.PROJECTION, BrowserContract.Bookmarks.PARENT + "=?",
-                    new String[] { Long.toString(mFolderId) }, null);
+                    BookmarksLoader.PROJECTION, BrowserContractCompat.Bookmarks.PARENT + "=?",
+                    new String[]{Long.toString(mFolderId)}, null);
         }
 
         @Override
@@ -510,18 +520,18 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         Intent intent = new Intent(getActivity(), AddBookmarkPage.class);
         Cursor cursor = adapter.getItem(position);
         Bundle item = new Bundle();
-        item.putString(BrowserContract.Bookmarks.TITLE,
+        item.putString(BrowserContractCompat.Bookmarks.TITLE,
                 cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE));
-        item.putString(BrowserContract.Bookmarks.URL,
+        item.putString(BrowserContractCompat.Bookmarks.URL,
                 cursor.getString(BookmarksLoader.COLUMN_INDEX_URL));
         byte[] data = cursor.getBlob(BookmarksLoader.COLUMN_INDEX_FAVICON);
         if (data != null) {
-            item.putParcelable(BrowserContract.Bookmarks.FAVICON,
+            item.putParcelable(BrowserContractCompat.Bookmarks.FAVICON,
                     BitmapFactory.decodeByteArray(data, 0, data.length));
         }
-        item.putLong(BrowserContract.Bookmarks._ID,
+        item.putLong(BrowserContractCompat.Bookmarks._ID,
                 cursor.getLong(BookmarksLoader.COLUMN_INDEX_ID));
-        item.putLong(BrowserContract.Bookmarks.PARENT,
+        item.putLong(BrowserContractCompat.Bookmarks.PARENT,
                 cursor.getLong(BookmarksLoader.COLUMN_INDEX_PARENT));
         intent.putExtra(AddBookmarkPage.EXTRA_EDIT_BOOKMARK, item);
         intent.putExtra(AddBookmarkPage.EXTRA_IS_FOLDER,
@@ -530,7 +540,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
     }
 
     private void displayRemoveBookmarkDialog(BrowserBookmarksAdapter adapter,
-            int position) {
+                                             int position) {
         // Put up a dialog asking if the user really wants to
         // delete the bookmark
         Cursor cursor = adapter.getItem(position);
@@ -544,7 +554,8 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         return getUrl(adapter.getItem(position));
     }
 
-    /* package */ static String getUrl(Cursor c) {
+    /* package */
+    static String getUrl(Cursor c) {
         return c.getString(BookmarksLoader.COLUMN_INDEX_URL);
     }
 
@@ -573,7 +584,7 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
         Uri uri = (Uri) data;
         if (uri == null) {
             // top level
-            uri = BrowserContract.Bookmarks.CONTENT_URI_DEFAULT_FOLDER;
+            uri = BrowserContractCompat.Bookmarks.CONTENT_URI_DEFAULT_FOLDER;
         }
         loadFolder(groupPosition, uri);
         if (level <= 1) {
@@ -629,12 +640,12 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
             Cursor c = null;
             try {
                 c = mContext.getContentResolver().query(uri,
-                        null, BrowserContract.Bookmarks.PARENT + "=?",
-                        new String[] {params[0].toString()}, null);
+                        null, BrowserContractCompat.Bookmarks.PARENT + "=?",
+                        new String[]{params[0].toString()}, null);
 
                 return c.getCount();
             } finally {
-                if ( c != null) {
+                if (c != null) {
                     c.close();
                 }
             }
@@ -653,16 +664,16 @@ public class BrowserBookmarksPage extends Fragment implements View.OnCreateConte
 
     static class AccountsLoader extends CursorLoader {
 
-        static String[] ACCOUNTS_PROJECTION = new String[] {
-            Accounts.ACCOUNT_NAME,
-            Accounts.ACCOUNT_TYPE
+        static String[] ACCOUNTS_PROJECTION = new String[]{
+                Accounts.ACCOUNT_NAME,
+                Accounts.ACCOUNT_TYPE
         };
 
         public AccountsLoader(Context context) {
             super(context, Accounts.CONTENT_URI
-                    .buildUpon()
-                    .appendQueryParameter(BrowserProvider2.PARAM_ALLOW_EMPTY_ACCOUNTS, "false")
-                    .build(),
+                            .buildUpon()
+                            .appendQueryParameter(BrowserProvider2.PARAM_ALLOW_EMPTY_ACCOUNTS, "false")
+                            .build(),
                     ACCOUNTS_PROJECTION, null, null, null);
         }
 

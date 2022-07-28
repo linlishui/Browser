@@ -38,7 +38,7 @@ import android.graphics.drawable.PaintDrawable;
 import android.net.Uri;
 import android.os.Message;
 import android.provider.Browser;
-import android.provider.BrowserContract;
+import com.android.browser.compat.BrowserContractCompat;
 
 public class BookmarkUtils {
     private final static String LOGTAG = "BookmarkUtils";
@@ -220,7 +220,7 @@ public class BookmarkUtils {
     }
 
     /* package */ static Uri getBookmarksUri(Context context) {
-        return BrowserContract.Bookmarks.CONTENT_URI;
+        return BrowserContractCompat.Bookmarks.CONTENT_URI;
     }
 
     /**
@@ -248,7 +248,7 @@ public class BookmarkUtils {
                                     @Override
                                     public void run() {
                                         Uri uri = ContentUris.withAppendedId(
-                                                BrowserContract.Bookmarks.CONTENT_URI,
+                                                BrowserContractCompat.Bookmarks.CONTENT_URI,
                                                 id);
                                         context.getContentResolver().delete(uri, null, null);
                                     }

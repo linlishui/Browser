@@ -20,7 +20,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.provider.BrowserContract.Bookmarks;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.TextView;
 
+import com.android.browser.compat.BrowserContractCompat.Bookmarks;
 import com.android.browser.util.ThreadedCursorAdapter;
 import com.android.browser.view.BookmarkContainer;
 
@@ -38,7 +38,7 @@ public class BrowserBookmarksAdapter extends
     Context mContext;
 
     /**
-     *  Create a new BrowserBookmarksAdapter.
+     * Create a new BrowserBookmarksAdapter.
      */
     public BrowserBookmarksAdapter(Context context) {
         // Make sure to tell the CursorAdapter to avoid the observer and auto-requery
@@ -69,8 +69,8 @@ public class BrowserBookmarksAdapter extends
     CharSequence getTitle(Cursor cursor) {
         int type = cursor.getInt(BookmarksLoader.COLUMN_INDEX_TYPE);
         switch (type) {
-        case Bookmarks.BOOKMARK_TYPE_OTHER_FOLDER:
-            return mContext.getText(R.string.other_bookmarks);
+            case Bookmarks.BOOKMARK_TYPE_OTHER_FOLDER:
+                return mContext.getText(R.string.other_bookmarks);
         }
         return cursor.getString(BookmarksLoader.COLUMN_INDEX_TITLE);
     }
@@ -104,7 +104,7 @@ public class BrowserBookmarksAdapter extends
 
     @Override
     public BrowserBookmarksAdapterItem getRowObject(Cursor c,
-            BrowserBookmarksAdapterItem item) {
+                                                    BrowserBookmarksAdapterItem item) {
         if (item == null) {
             item = new BrowserBookmarksAdapterItem();
         }

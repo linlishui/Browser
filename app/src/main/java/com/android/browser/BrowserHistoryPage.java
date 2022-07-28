@@ -38,8 +38,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Browser;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Combined;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -60,6 +58,9 @@ import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Combined;
 
 /**
  * Activity for displaying the browser's history, divided into
@@ -85,7 +86,7 @@ public class BrowserHistoryPage extends Fragment
     private View mRoot;
 
     static interface HistoryQuery {
-        static final String[] PROJECTION = new String[] {
+        static final String[] PROJECTION = new String[]{
                 Combined._ID, // 0
                 Combined.DATE_LAST_VISITED, // 1
                 Combined.TITLE, // 2
@@ -125,7 +126,7 @@ public class BrowserHistoryPage extends Fragment
 
             case LOADER_MOST_VISITED: {
                 Uri uri = combinedBuilder
-                        .appendQueryParameter(BrowserContract.PARAM_LIMIT, mMostVisitsLimit)
+                        .appendQueryParameter(BrowserContractCompat.PARAM_LIMIT, mMostVisitsLimit)
                         .build();
                 String where = Combined.VISITS + " > 0";
                 CursorLoader loader = new CursorLoader(getActivity(), uri,
@@ -204,7 +205,7 @@ public class BrowserHistoryPage extends Fragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         mRoot = inflater.inflate(R.layout.history, container, false);
         mAdapter = new HistoryAdapter(getActivity());
         ViewStub stub = (ViewStub) mRoot.findViewById(R.id.pref_stub);
@@ -270,7 +271,7 @@ public class BrowserHistoryPage extends Fragment
 
     @Override
     public boolean onChildClick(ExpandableListView parent, View view,
-            int groupPosition, int childPosition, long id) {
+                                int groupPosition, int childPosition, long id) {
         mCallback.openUrl(((HistoryItem) view).getUrl());
         return true;
     }
@@ -296,12 +297,12 @@ public class BrowserHistoryPage extends Fragment
                 .setIconAttribute(android.R.attr.alertDialogIcon)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                     @Override
-                     public void onClick(DialogInterface dialog, int which) {
-                         if (which == DialogInterface.BUTTON_POSITIVE) {
-                             clear.start();
-                         }
-                     }
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == DialogInterface.BUTTON_POSITIVE) {
+                            clear.start();
+                        }
+                    }
                 });
         final Dialog dialog = builder.create();
         dialog.show();
@@ -454,6 +455,7 @@ public class BrowserHistoryPage extends Fragment
         }
 
     }
+
     private static class HistoryGroupWrapper extends HistoryWrapper {
 
         public HistoryGroupWrapper(HistoryAdapter adapter) {
@@ -597,7 +599,7 @@ public class BrowserHistoryPage extends Fragment
 
         @Override
         public View getGroupView(int groupPosition, boolean isExpanded,
-                View convertView, ViewGroup parent) {
+                                 View convertView, ViewGroup parent) {
             if (groupPosition >= super.getGroupCount()) {
                 if (mMostVisited == null || mMostVisited.isClosed()) {
                     throw new IllegalStateException("Data is not valid");
@@ -630,7 +632,7 @@ public class BrowserHistoryPage extends Fragment
 
         @Override
         public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
-                View convertView, ViewGroup parent) {
+                                 View convertView, ViewGroup parent) {
             HistoryItem item;
             if (null == convertView || !(convertView instanceof HistoryItem)) {
                 item = new HistoryItem(getContext());

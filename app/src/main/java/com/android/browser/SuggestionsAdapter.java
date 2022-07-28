@@ -21,7 +21,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.provider.BrowserContract;
 import android.text.Html;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -34,6 +33,7 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.browser.compat.BrowserContractCompat;
 import com.android.browser.provider.BrowserProvider2.OmniboxSuggestions;
 import com.android.browser.search.SearchEngine;
 
@@ -57,7 +57,7 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable,
             OmniboxSuggestions.TITLE,
             OmniboxSuggestions.URL,
             OmniboxSuggestions.IS_BOOKMARK
-            };
+    };
 
     private static final String COMBINED_SELECTION =
             "(url LIKE ? OR url LIKE ? OR url LIKE ? OR url LIKE ? OR title LIKE ?)";
@@ -326,7 +326,6 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable,
 
     /**
      * sorted list of results of a suggestion query
-     *
      */
     class SuggestionResults {
 
@@ -453,7 +452,7 @@ public class SuggestionsAdapter extends BaseAdapter implements Filterable,
                 selection = COMBINED_SELECTION;
             }
             Uri.Builder ub = OmniboxSuggestions.CONTENT_URI.buildUpon();
-            ub.appendQueryParameter(BrowserContract.PARAM_LIMIT,
+            ub.appendQueryParameter(BrowserContractCompat.PARAM_LIMIT,
                     Integer.toString(Math.max(mLinesLandscape, mLinesPortrait)));
             mCursor =
                     mContext.getContentResolver().query(ub.build(), COMBINED_PROJECTION,

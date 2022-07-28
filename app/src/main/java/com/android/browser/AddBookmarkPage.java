@@ -16,9 +16,6 @@
 
 package com.android.browser;
 
-import com.android.browser.addbookmark.FolderSpinner;
-import com.android.browser.addbookmark.FolderSpinnerAdapter;
-
 import android.app.Activity;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -40,8 +37,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Accounts;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
@@ -61,6 +56,11 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.browser.addbookmark.FolderSpinner;
+import com.android.browser.addbookmark.FolderSpinnerAdapter;
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Accounts;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -90,15 +90,15 @@ public class AddBookmarkPage extends Activity
     private final int LOADER_ID_FOLDER_CONTENTS = 1;
     private final int LOADER_ID_EDIT_INFO = 2;
 
-    private EditText    mTitle;
-    private EditText    mAddress;
-    private TextView    mButton;
-    private View        mCancelButton;
-    private boolean     mEditingExisting;
-    private boolean     mEditingFolder;
-    private Bundle      mMap;
-    private String      mTouchIconUrl;
-    private String      mOriginalUrl;
+    private EditText mTitle;
+    private EditText mAddress;
+    private TextView mButton;
+    private View mCancelButton;
+    private boolean mEditingExisting;
+    private boolean mEditingFolder;
+    private Bundle mMap;
+    private String mTouchIconUrl;
+    private String mOriginalUrl;
     private FolderSpinner mFolder;
     private View mDefaultView;
     private View mFolderSelector;
@@ -127,6 +127,7 @@ public class AddBookmarkPage extends Activity
     private static class Folder {
         String Name;
         long Id;
+
         Folder(String name, long id) {
             Name = name;
             Id = id;
@@ -149,10 +150,10 @@ public class AddBookmarkPage extends Activity
                 (BookmarkAccount) mAccountSpinner.getSelectedItem();
         if (folder == mRootFolder && account != null) {
             return BookmarksLoader.addAccount(
-                    BrowserContract.Bookmarks.CONTENT_URI_DEFAULT_FOLDER,
+                    BrowserContractCompat.Bookmarks.CONTENT_URI_DEFAULT_FOLDER,
                     account.accountType, account.accountName);
         }
-        return BrowserContract.Bookmarks.buildFolderUri(folder);
+        return BrowserContractCompat.Bookmarks.buildFolderUri(folder);
     }
 
     @Override
@@ -173,10 +174,11 @@ public class AddBookmarkPage extends Activity
 
     /**
      * Show or hide the icon for bookmarks next to "Bookmarks" in the crumb view.
+     *
      * @param show True if the icon should visible, false otherwise.
      */
     private void setShowBookmarkIcon(boolean show) {
-        Drawable drawable = show ? mHeaderIcon: null;
+        Drawable drawable = show ? mHeaderIcon : null;
         mTopLevelLabel.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
     }
 
@@ -286,7 +288,7 @@ public class AddBookmarkPage extends Activity
                 throw new AssertionError("Remove button should not be shown for"
                         + " new bookmarks");
             }
-            long id = mMap.getLong(BrowserContract.Bookmarks._ID);
+            long id = mMap.getLong(BrowserContractCompat.Bookmarks._ID);
             createHandler();
             Message msg = Message.obtain(mHandler, BOOKMARK_DELETED);
             BookmarkUtils.displayRemoveBookmarkDialog(id,
@@ -327,8 +329,9 @@ public class AddBookmarkPage extends Activity
 
     /**
      * Finish naming a folder, and close the IME
+     *
      * @param cancel If true, the new folder is not created.  If false, the new
-     *      folder is created and the user is taken inside it.
+     *               folder is created and the user is taken inside it.
      */
     private void completeOrCancelFolderNaming(boolean cancel) {
         if (!cancel && !TextUtils.isEmpty(mFolderNamer.getText())) {
@@ -346,9 +349,9 @@ public class AddBookmarkPage extends Activity
     private long addFolderToCurrent(String name) {
         // Add the folder to the database
         ContentValues values = new ContentValues();
-        values.put(BrowserContract.Bookmarks.TITLE,
+        values.put(BrowserContractCompat.Bookmarks.TITLE,
                 name);
-        values.put(BrowserContract.Bookmarks.IS_FOLDER, 1);
+        values.put(BrowserContractCompat.Bookmarks.IS_FOLDER, 1);
         long currentFolder;
         Object data = mCrumbs.getTopData();
         if (data != null) {
@@ -356,9 +359,9 @@ public class AddBookmarkPage extends Activity
         } else {
             currentFolder = mRootFolder;
         }
-        values.put(BrowserContract.Bookmarks.PARENT, currentFolder);
+        values.put(BrowserContractCompat.Bookmarks.PARENT, currentFolder);
         Uri uri = getContentResolver().insert(
-                BrowserContract.Bookmarks.CONTENT_URI, values);
+                BrowserContractCompat.Bookmarks.CONTENT_URI, values);
         if (uri != null) {
             return ContentUris.parseId(uri);
         } else {
@@ -389,56 +392,56 @@ public class AddBookmarkPage extends Activity
     private LoaderCallbacks<EditBookmarkInfo> mEditInfoLoaderCallbacks =
             new LoaderCallbacks<EditBookmarkInfo>() {
 
-        @Override
-        public void onLoaderReset(Loader<EditBookmarkInfo> loader) {
-            // Don't care
-        }
+                @Override
+                public void onLoaderReset(Loader<EditBookmarkInfo> loader) {
+                    // Don't care
+                }
 
-        @Override
-        public void onLoadFinished(Loader<EditBookmarkInfo> loader,
-                EditBookmarkInfo info) {
-            boolean setAccount = false;
-            if (info.id != -1) {
-                mEditingExisting = true;
-                showRemoveButton();
-                mFakeTitle.setText(R.string.edit_bookmark);
-                mTitle.setText(info.title);
-                mFolderAdapter.setOtherFolderDisplayText(info.parentTitle);
-                mMap.putLong(BrowserContract.Bookmarks._ID, info.id);
-                setAccount = true;
-                setAccount(info.accountName, info.accountType);
-                mCurrentFolder = info.parentId;
-                onCurrentFolderFound();
-            }
-            // TODO: Detect if lastUsedId is a subfolder of info.id in the
-            // editing folder case. For now, just don't show the last used
-            // folder at all to prevent any chance of the user adding a parent
-            // folder to a child folder
-            if (info.lastUsedId != -1 && info.lastUsedId != info.id
-                    && !mEditingFolder) {
-                if (setAccount && info.lastUsedId != mRootFolder
-                        && TextUtils.equals(info.lastUsedAccountName, info.accountName)
-                        && TextUtils.equals(info.lastUsedAccountType, info.accountType)) {
-                    mFolderAdapter.addRecentFolder(info.lastUsedId, info.lastUsedTitle);
-                } else if (!setAccount) {
-                    setAccount = true;
-                    setAccount(info.lastUsedAccountName, info.lastUsedAccountType);
-                    if (info.lastUsedId != mRootFolder) {
-                        mFolderAdapter.addRecentFolder(info.lastUsedId,
-                                info.lastUsedTitle);
+                @Override
+                public void onLoadFinished(Loader<EditBookmarkInfo> loader,
+                                           EditBookmarkInfo info) {
+                    boolean setAccount = false;
+                    if (info.id != -1) {
+                        mEditingExisting = true;
+                        showRemoveButton();
+                        mFakeTitle.setText(R.string.edit_bookmark);
+                        mTitle.setText(info.title);
+                        mFolderAdapter.setOtherFolderDisplayText(info.parentTitle);
+                        mMap.putLong(BrowserContractCompat.Bookmarks._ID, info.id);
+                        setAccount = true;
+                        setAccount(info.accountName, info.accountType);
+                        mCurrentFolder = info.parentId;
+                        onCurrentFolderFound();
+                    }
+                    // TODO: Detect if lastUsedId is a subfolder of info.id in the
+                    // editing folder case. For now, just don't show the last used
+                    // folder at all to prevent any chance of the user adding a parent
+                    // folder to a child folder
+                    if (info.lastUsedId != -1 && info.lastUsedId != info.id
+                            && !mEditingFolder) {
+                        if (setAccount && info.lastUsedId != mRootFolder
+                                && TextUtils.equals(info.lastUsedAccountName, info.accountName)
+                                && TextUtils.equals(info.lastUsedAccountType, info.accountType)) {
+                            mFolderAdapter.addRecentFolder(info.lastUsedId, info.lastUsedTitle);
+                        } else if (!setAccount) {
+                            setAccount = true;
+                            setAccount(info.lastUsedAccountName, info.lastUsedAccountType);
+                            if (info.lastUsedId != mRootFolder) {
+                                mFolderAdapter.addRecentFolder(info.lastUsedId,
+                                        info.lastUsedTitle);
+                            }
+                        }
+                    }
+                    if (!setAccount) {
+                        mAccountSpinner.setSelection(0);
                     }
                 }
-            }
-            if (!setAccount) {
-                mAccountSpinner.setSelection(0);
-            }
-        }
 
-        @Override
-        public Loader<EditBookmarkInfo> onCreateLoader(int id, Bundle args) {
-            return new EditBookmarkInfoLoader(AddBookmarkPage.this, mMap);
-        }
-    };
+                @Override
+                public Loader<EditBookmarkInfo> onCreateLoader(int id, Bundle args) {
+                    return new EditBookmarkInfoLoader(AddBookmarkPage.this, mMap);
+                }
+            };
 
     void setAccount(String accountName, String accountType) {
         for (int i = 0; i < mAccountAdapter.getCount(); i++) {
@@ -459,17 +462,17 @@ public class AddBookmarkPage extends Activity
             case LOADER_ID_ACCOUNTS:
                 return new AccountsLoader(this);
             case LOADER_ID_FOLDER_CONTENTS:
-                projection = new String[] {
-                        BrowserContract.Bookmarks._ID,
-                        BrowserContract.Bookmarks.TITLE,
-                        BrowserContract.Bookmarks.IS_FOLDER
+                projection = new String[]{
+                        BrowserContractCompat.Bookmarks._ID,
+                        BrowserContractCompat.Bookmarks.TITLE,
+                        BrowserContractCompat.Bookmarks.IS_FOLDER
                 };
-                String where = BrowserContract.Bookmarks.IS_FOLDER + " != 0";
+                String where = BrowserContractCompat.Bookmarks.IS_FOLDER + " != 0";
                 String whereArgs[] = null;
                 if (mEditingFolder) {
-                    where += " AND " + BrowserContract.Bookmarks._ID + " != ?";
-                    whereArgs = new String[] { Long.toString(mMap.getLong(
-                            BrowserContract.Bookmarks._ID)) };
+                    where += " AND " + BrowserContractCompat.Bookmarks._ID + " != ?";
+                    whereArgs = new String[]{Long.toString(mMap.getLong(
+                            BrowserContractCompat.Bookmarks._ID))};
                 }
                 long currentFolder;
                 Object data = mCrumbs.getTopData();
@@ -483,7 +486,7 @@ public class AddBookmarkPage extends Activity
                         projection,
                         where,
                         whereArgs,
-                        BrowserContract.Bookmarks._ID + " ASC");
+                        BrowserContractCompat.Bookmarks._ID + " ASC");
             default:
                 throw new AssertionError("Asking for nonexistant loader!");
         }
@@ -517,11 +520,12 @@ public class AddBookmarkPage extends Activity
 
     /**
      * Move cursor to the position that has folderToFind as its "_id".
-     * @param cursor Cursor containing folders in the bookmarks database
+     *
+     * @param cursor       Cursor containing folders in the bookmarks database
      * @param folderToFind "_id" of the folder to move to.
-     * @param idIndex Index in cursor of "_id"
+     * @param idIndex      Index in cursor of "_id"
      * @throws AssertionError if cursor is empty or there is no row with folderToFind
-     *      as its "_id".
+     *                        as its "_id".
      */
     void moveCursorToFolder(Cursor cursor, long folderToFind, int idIndex)
             throws AssertionError {
@@ -540,7 +544,7 @@ public class AddBookmarkPage extends Activity
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position,
-            long id) {
+                            long id) {
         TextView tv = (TextView) view.findViewById(android.R.id.text1);
         // Switch to the folder that was clicked on.
         descendInto(tv.getText().toString(), id);
@@ -576,7 +580,7 @@ public class AddBookmarkPage extends Activity
         public void bindView(View view, Context context, Cursor cursor) {
             ((TextView) view.findViewById(android.R.id.text1)).setText(
                     cursor.getString(cursor.getColumnIndexOrThrow(
-                    BrowserContract.Bookmarks.TITLE)));
+                            BrowserContractCompat.Bookmarks.TITLE)));
         }
 
         @Override
@@ -631,10 +635,10 @@ public class AddBookmarkPage extends Activity
                     window.setAttributes(l);
                 }
             }
-            title = mMap.getString(BrowserContract.Bookmarks.TITLE);
-            url = mOriginalUrl = mMap.getString(BrowserContract.Bookmarks.URL);
+            title = mMap.getString(BrowserContractCompat.Bookmarks.TITLE);
+            url = mOriginalUrl = mMap.getString(BrowserContractCompat.Bookmarks.URL);
             mTouchIconUrl = mMap.getString(TOUCH_ICON_URL);
-            mCurrentFolder = mMap.getLong(BrowserContract.Bookmarks.PARENT, DEFAULT_FOLDER_ID);
+            mCurrentFolder = mMap.getLong(BrowserContractCompat.Bookmarks.PARENT, DEFAULT_FOLDER_ID);
         }
 
         mTitle = (EditText) findViewById(R.id.title);
@@ -751,18 +755,20 @@ public class AddBookmarkPage extends Activity
         // FIXME: This should be an async task.
         private Message mMessage;
         private Context mContext;
+
         public SaveBookmarkRunnable(Context ctx, Message msg) {
             mContext = ctx.getApplicationContext();
             mMessage = msg;
         }
+
         public void run() {
             // Unbundle bookmark data.
             Bundle bundle = mMessage.getData();
-            String title = bundle.getString(BrowserContract.Bookmarks.TITLE);
-            String url = bundle.getString(BrowserContract.Bookmarks.URL);
+            String title = bundle.getString(BrowserContractCompat.Bookmarks.TITLE);
+            String url = bundle.getString(BrowserContractCompat.Bookmarks.URL);
             boolean invalidateThumbnail = bundle.getBoolean(REMOVE_THUMBNAIL);
             Bitmap thumbnail = invalidateThumbnail ? null
-                    : (Bitmap) bundle.getParcelable(BrowserContract.Bookmarks.THUMBNAIL);
+                    : (Bitmap) bundle.getParcelable(BrowserContractCompat.Bookmarks.THUMBNAIL);
             String touchIconUrl = bundle.getString(TOUCH_ICON_URL);
 
             // Save to the bookmarks DB.
@@ -822,10 +828,10 @@ public class AddBookmarkPage extends Activity
                             Bundle b = msg.getData();
                             sendBroadcast(BookmarkUtils.createAddToHomeIntent(
                                     AddBookmarkPage.this,
-                                    b.getString(BrowserContract.Bookmarks.URL),
-                                    b.getString(BrowserContract.Bookmarks.TITLE),
-                                    (Bitmap) b.getParcelable(BrowserContract.Bookmarks.TOUCH_ICON),
-                                    (Bitmap) b.getParcelable(BrowserContract.Bookmarks.FAVICON)));
+                                    b.getString(BrowserContractCompat.Bookmarks.URL),
+                                    b.getString(BrowserContractCompat.Bookmarks.TITLE),
+                                    (Bitmap) b.getParcelable(BrowserContractCompat.Bookmarks.TOUCH_ICON),
+                                    (Bitmap) b.getParcelable(BrowserContractCompat.Bookmarks.FAVICON)));
                             break;
                         case BOOKMARK_DELETED:
                             finish();
@@ -901,14 +907,14 @@ public class AddBookmarkPage extends Activity
         boolean urlUnmodified = url.equals(mOriginalUrl);
 
         if (mEditingExisting) {
-            Long id = mMap.getLong(BrowserContract.Bookmarks._ID);
+            Long id = mMap.getLong(BrowserContractCompat.Bookmarks._ID);
             ContentValues values = new ContentValues();
-            values.put(BrowserContract.Bookmarks.TITLE, title);
-            values.put(BrowserContract.Bookmarks.PARENT, mCurrentFolder);
+            values.put(BrowserContractCompat.Bookmarks.TITLE, title);
+            values.put(BrowserContractCompat.Bookmarks.PARENT, mCurrentFolder);
             if (!mEditingFolder) {
-                values.put(BrowserContract.Bookmarks.URL, url);
+                values.put(BrowserContractCompat.Bookmarks.URL, url);
                 if (!urlUnmodified) {
-                    values.putNull(BrowserContract.Bookmarks.THUMBNAIL);
+                    values.putNull(BrowserContractCompat.Bookmarks.THUMBNAIL);
                 }
             }
             if (values.size() > 0) {
@@ -920,18 +926,18 @@ public class AddBookmarkPage extends Activity
             Bitmap favicon;
             if (urlUnmodified) {
                 thumbnail = (Bitmap) mMap.getParcelable(
-                        BrowserContract.Bookmarks.THUMBNAIL);
+                        BrowserContractCompat.Bookmarks.THUMBNAIL);
                 favicon = (Bitmap) mMap.getParcelable(
-                        BrowserContract.Bookmarks.FAVICON);
+                        BrowserContractCompat.Bookmarks.FAVICON);
             } else {
                 thumbnail = null;
                 favicon = null;
             }
 
             Bundle bundle = new Bundle();
-            bundle.putString(BrowserContract.Bookmarks.TITLE, title);
-            bundle.putString(BrowserContract.Bookmarks.URL, url);
-            bundle.putParcelable(BrowserContract.Bookmarks.FAVICON, favicon);
+            bundle.putString(BrowserContractCompat.Bookmarks.TITLE, title);
+            bundle.putString(BrowserContractCompat.Bookmarks.URL, url);
+            bundle.putParcelable(BrowserContractCompat.Bookmarks.FAVICON, favicon);
 
             if (mSaveToHomeScreen) {
                 if (mTouchIconUrl != null && urlUnmodified) {
@@ -946,7 +952,7 @@ public class AddBookmarkPage extends Activity
                             title, null /*touchIcon*/, favicon));
                 }
             } else {
-                bundle.putParcelable(BrowserContract.Bookmarks.THUMBNAIL, thumbnail);
+                bundle.putParcelable(BrowserContractCompat.Bookmarks.THUMBNAIL, thumbnail);
                 bundle.putBoolean(REMOVE_THUMBNAIL, !urlUnmodified);
                 bundle.putString(TOUCH_ICON_URL, mTouchIconUrl);
                 // Post a message to write to the DB.
@@ -964,7 +970,7 @@ public class AddBookmarkPage extends Activity
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position,
-            long id) {
+                               long id) {
         if (mAccountSpinner == parent) {
             long root = mAccountAdapter.getItem(position).rootFolderId;
             if (root != mRootFolder) {
@@ -1009,10 +1015,10 @@ public class AddBookmarkPage extends Activity
 
     static class AccountsLoader extends CursorLoader {
 
-        static final String[] PROJECTION = new String[] {
-            Accounts.ACCOUNT_NAME,
-            Accounts.ACCOUNT_TYPE,
-            Accounts.ROOT_ID,
+        static final String[] PROJECTION = new String[]{
+                Accounts.ACCOUNT_NAME,
+                Accounts.ACCOUNT_TYPE,
+                Accounts.ROOT_ID,
         };
 
         static final int COLUMN_INDEX_ACCOUNT_NAME = 0;
@@ -1083,14 +1089,14 @@ public class AddBookmarkPage extends Activity
 
             try {
                 // First, let's lookup the bookmark (check for dupes, get needed info)
-                String url = mMap.getString(BrowserContract.Bookmarks.URL);
-                info.id = mMap.getLong(BrowserContract.Bookmarks._ID, -1);
+                String url = mMap.getString(BrowserContractCompat.Bookmarks.URL);
+                info.id = mMap.getLong(BrowserContractCompat.Bookmarks._ID, -1);
                 boolean checkForDupe = mMap.getBoolean(CHECK_FOR_DUPE);
                 if (checkForDupe && info.id == -1 && !TextUtils.isEmpty(url)) {
-                    c = cr.query(BrowserContract.Bookmarks.CONTENT_URI,
-                            new String[] { BrowserContract.Bookmarks._ID},
-                            BrowserContract.Bookmarks.URL + "=?",
-                            new String[] { url }, null);
+                    c = cr.query(BrowserContractCompat.Bookmarks.CONTENT_URI,
+                            new String[]{BrowserContractCompat.Bookmarks._ID},
+                            BrowserContractCompat.Bookmarks.URL + "=?",
+                            new String[]{url}, null);
                     if (c.getCount() == 1 && c.moveToFirst()) {
                         info.id = c.getLong(0);
                     }
@@ -1098,12 +1104,12 @@ public class AddBookmarkPage extends Activity
                 }
                 if (info.id != -1) {
                     c = cr.query(ContentUris.withAppendedId(
-                            BrowserContract.Bookmarks.CONTENT_URI, info.id),
-                            new String[] {
-                            BrowserContract.Bookmarks.PARENT,
-                            BrowserContract.Bookmarks.ACCOUNT_NAME,
-                            BrowserContract.Bookmarks.ACCOUNT_TYPE,
-                            BrowserContract.Bookmarks.TITLE},
+                                    BrowserContractCompat.Bookmarks.CONTENT_URI, info.id),
+                            new String[]{
+                                    BrowserContractCompat.Bookmarks.PARENT,
+                                    BrowserContractCompat.Bookmarks.ACCOUNT_NAME,
+                                    BrowserContractCompat.Bookmarks.ACCOUNT_TYPE,
+                                    BrowserContractCompat.Bookmarks.TITLE},
                             null, null, null);
                     if (c.moveToFirst()) {
                         info.parentId = c.getLong(0);
@@ -1113,9 +1119,9 @@ public class AddBookmarkPage extends Activity
                     }
                     c.close();
                     c = cr.query(ContentUris.withAppendedId(
-                            BrowserContract.Bookmarks.CONTENT_URI, info.parentId),
-                            new String[] {
-                            BrowserContract.Bookmarks.TITLE,},
+                                    BrowserContractCompat.Bookmarks.CONTENT_URI, info.parentId),
+                            new String[]{
+                                    BrowserContractCompat.Bookmarks.TITLE,},
                             null, null, null);
                     if (c.moveToFirst()) {
                         info.parentTitle = c.getString(0);
@@ -1124,21 +1130,21 @@ public class AddBookmarkPage extends Activity
                 }
 
                 // Figure out the last used folder/account
-                c = cr.query(BrowserContract.Bookmarks.CONTENT_URI,
-                        new String[] {
-                        BrowserContract.Bookmarks.PARENT,
+                c = cr.query(BrowserContractCompat.Bookmarks.CONTENT_URI,
+                        new String[]{
+                                BrowserContractCompat.Bookmarks.PARENT,
                         }, null, null,
-                        BrowserContract.Bookmarks.DATE_MODIFIED + " DESC LIMIT 1");
+                        BrowserContractCompat.Bookmarks.DATE_MODIFIED + " DESC LIMIT 1");
                 if (c.moveToFirst()) {
                     long parent = c.getLong(0);
                     c.close();
-                    c = cr.query(BrowserContract.Bookmarks.CONTENT_URI,
-                            new String[] {
-                            BrowserContract.Bookmarks.TITLE,
-                            BrowserContract.Bookmarks.ACCOUNT_NAME,
-                            BrowserContract.Bookmarks.ACCOUNT_TYPE},
-                            BrowserContract.Bookmarks._ID + "=?", new String[] {
-                            Long.toString(parent)}, null);
+                    c = cr.query(BrowserContractCompat.Bookmarks.CONTENT_URI,
+                            new String[]{
+                                    BrowserContractCompat.Bookmarks.TITLE,
+                                    BrowserContractCompat.Bookmarks.ACCOUNT_NAME,
+                                    BrowserContractCompat.Bookmarks.ACCOUNT_TYPE},
+                            BrowserContractCompat.Bookmarks._ID + "=?", new String[]{
+                                    Long.toString(parent)}, null);
                     if (c.moveToFirst()) {
                         info.lastUsedId = parent;
                         info.lastUsedTitle = c.getString(0);

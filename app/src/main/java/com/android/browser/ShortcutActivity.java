@@ -16,25 +16,22 @@
 
 package com.android.browser;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-public class ShortcutActivity extends Activity
-    implements BookmarksPageCallbacks, OnClickListener {
+import androidx.appcompat.app.AppCompatActivity;
 
-    private BrowserBookmarksPage mBookmarks;
+public class ShortcutActivity extends AppCompatActivity implements BookmarksPageCallbacks, OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle(R.string.shortcut_bookmark_title);
         setContentView(R.layout.pick_bookmark);
-        mBookmarks = (BrowserBookmarksPage) getFragmentManager()
-                .findFragmentById(R.id.bookmarks);
+        BrowserBookmarksPage mBookmarks = (BrowserBookmarksPage) getSupportFragmentManager().findFragmentById(R.id.bookmarks);
         mBookmarks.setEnableContextMenu(false);
         mBookmarks.setCallbackListener(this);
         View cancel = findViewById(R.id.cancel);
@@ -42,8 +39,6 @@ public class ShortcutActivity extends Activity
             cancel.setOnClickListener(this);
         }
     }
-
-    // BookmarksPageCallbacks
 
     @Override
     public boolean onBookmarkSelected(Cursor c, boolean isFolder) {

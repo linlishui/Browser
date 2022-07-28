@@ -23,16 +23,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Accounts;
-import android.provider.BrowserContract.Bookmarks;
 import android.text.TextUtils;
+
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Accounts;
+import com.android.browser.compat.BrowserContractCompat.Bookmarks;
 
 public class AccountsChangedReceiver extends BroadcastReceiver {
 
-    private static final String[] PROJECTION = new String[] {
-        Accounts.ACCOUNT_NAME,
-        Accounts.ACCOUNT_TYPE,
+    private static final String[] PROJECTION = new String[]{
+            Accounts.ACCOUNT_NAME,
+            Accounts.ACCOUNT_TYPE,
     };
     private static final String SELECTION = Accounts.ACCOUNT_NAME + " IS NOT NULL";
     private static final String DELETE_SELECTION = Accounts.ACCOUNT_NAME + "=? AND "
@@ -45,6 +46,7 @@ public class AccountsChangedReceiver extends BroadcastReceiver {
 
     static class DeleteRemovedAccounts extends Thread {
         Context mContext;
+
         public DeleteRemovedAccounts(Context context) {
             mContext = context.getApplicationContext();
         }
@@ -72,9 +74,9 @@ public class AccountsChangedReceiver extends BroadcastReceiver {
             // be deleted, which will propagate to the server if the account
             // is added back.
             Uri uri = Bookmarks.CONTENT_URI.buildUpon()
-                    .appendQueryParameter(BrowserContract.CALLER_IS_SYNCADAPTER, "true")
+                    .appendQueryParameter(BrowserContractCompat.CALLER_IS_SYNCADAPTER, "true")
                     .build();
-            cr.delete(uri, DELETE_SELECTION, new String[] { name, type });
+            cr.delete(uri, DELETE_SELECTION, new String[]{name, type});
         }
 
         boolean contains(Account[] accounts, String name, String type) {

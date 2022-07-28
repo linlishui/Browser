@@ -29,7 +29,6 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.preference.PreferenceActivity;
-import android.provider.BrowserContract.Bookmarks;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +44,7 @@ import android.widget.TextView;
 
 import com.android.browser.R;
 import com.android.browser.WebStorageSizeManager;
+import com.android.browser.compat.BrowserContractCompat.Bookmarks;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -154,7 +154,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
 
         private String hideHttp(String str) {
             Uri uri = Uri.parse(str);
-            return "http".equals(uri.getScheme()) ?  str.substring(7) : str;
+            return "http".equals(uri.getScheme()) ? str.substring(7) : str;
         }
 
         @Override
@@ -209,7 +209,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
         public SiteAdapter(Context context, int rsc, Site site) {
             super(context, rsc);
             mResource = rsc;
-            mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             mDefaultIcon = BitmapFactory.decodeResource(getResources(),
                     R.drawable.app_web_browser_sm);
             mUsageEmptyIcon = BitmapFactory.decodeResource(getResources(),
@@ -268,7 +268,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
         }
 
         public void askForGeolocation(final Map<String, Site> sites) {
-            GeolocationPermissions.getInstance().getOrigins(new ValueCallback<Set<String> >() {
+            GeolocationPermissions.getInstance().getOrigins(new ValueCallback<Set<String>>() {
                 public void onReceiveValue(Set<String> origins) {
                     if (origins != null) {
                         Iterator<String> iter = origins.iterator();
@@ -310,7 +310,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
                     String host = Uri.parse(entry.getKey()).getHost();
                     Set<Site> hostSites = null;
                     if (hosts.containsKey(host)) {
-                        hostSites = (Set<Site>)hosts.get(host);
+                        hostSites = (Set<Site>) hosts.get(host);
                     } else {
                         hostSites = new HashSet<Site>();
                         hosts.put(host, hostSites);
@@ -321,7 +321,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
                 // Check the bookmark DB. If we have data for a host used by any of
                 // our origins, use it to set their title and favicon
                 Cursor c = mContext.getContentResolver().query(Bookmarks.CONTENT_URI,
-                        new String[] { Bookmarks.URL, Bookmarks.TITLE, Bookmarks.FAVICON },
+                        new String[]{Bookmarks.URL, Bookmarks.TITLE, Bookmarks.FAVICON},
                         Bookmarks.IS_FOLDER + " == 0", null, null);
 
                 if (c != null) {
@@ -350,7 +350,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
                                     // then we risk displaying the title of that page which may or
                                     // may not have any relevance to the origin.
                                     if (url.equals(site.getOrigin()) ||
-                                            (new String(site.getOrigin()+"/")).equals(url)) {
+                                            (new String(site.getOrigin() + "/")).equals(url)) {
                                         mDataSetChanged = true;
                                         site.setTitle(title);
                                     }
@@ -365,7 +365,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
                     }
                     c.close();
                 }
-            return null;
+                return null;
             }
 
             protected void onPostExecute(Void unused) {
@@ -431,8 +431,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
         }
 
         /**
-         * @hide
-         * Utility function
+         * @hide Utility function
          * Set the icon according to the usage
          */
         public void setIconForUsage(ImageView usageIcon, long usageInBytes) {
@@ -581,41 +580,43 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
                 switch (mCurrentSite.getFeatureByIndex(position)) {
                     case Site.FEATURE_WEB_STORAGE:
                         new AlertDialog.Builder(getContext())
-                            .setMessage(R.string.webstorage_clear_data_dialog_message)
-                            .setPositiveButton(R.string.webstorage_clear_data_dialog_ok_button,
-                                               new AlertDialog.OnClickListener() {
-                                public void onClick(DialogInterface dlg, int which) {
-                                    WebStorage.getInstance().deleteOrigin(mCurrentSite.getOrigin());
-                                    // If this site has no more features, then go back to the
-                                    // origins list.
-                                    mCurrentSite.removeFeature(Site.FEATURE_WEB_STORAGE);
-                                    if (mCurrentSite.getFeatureCount() == 0) {
-                                        finish();
-                                    }
-                                    askForOrigins();
-                                    notifyDataSetChanged();
-                                }})
-                            .setNegativeButton(R.string.webstorage_clear_data_dialog_cancel_button, null)
-                            .setIconAttribute(android.R.attr.alertDialogIcon)
-                            .show();
+                                .setMessage(R.string.webstorage_clear_data_dialog_message)
+                                .setPositiveButton(R.string.webstorage_clear_data_dialog_ok_button,
+                                        new AlertDialog.OnClickListener() {
+                                            public void onClick(DialogInterface dlg, int which) {
+                                                WebStorage.getInstance().deleteOrigin(mCurrentSite.getOrigin());
+                                                // If this site has no more features, then go back to the
+                                                // origins list.
+                                                mCurrentSite.removeFeature(Site.FEATURE_WEB_STORAGE);
+                                                if (mCurrentSite.getFeatureCount() == 0) {
+                                                    finish();
+                                                }
+                                                askForOrigins();
+                                                notifyDataSetChanged();
+                                            }
+                                        })
+                                .setNegativeButton(R.string.webstorage_clear_data_dialog_cancel_button, null)
+                                .setIconAttribute(android.R.attr.alertDialogIcon)
+                                .show();
                         break;
                     case Site.FEATURE_GEOLOCATION:
                         new AlertDialog.Builder(getContext())
-                            .setMessage(R.string.geolocation_settings_page_dialog_message)
-                            .setPositiveButton(R.string.geolocation_settings_page_dialog_ok_button,
-                                               new AlertDialog.OnClickListener() {
-                                public void onClick(DialogInterface dlg, int which) {
-                                    GeolocationPermissions.getInstance().clear(mCurrentSite.getOrigin());
-                                    mCurrentSite.removeFeature(Site.FEATURE_GEOLOCATION);
-                                    if (mCurrentSite.getFeatureCount() == 0) {
-                                        finish();
-                                    }
-                                    askForOrigins();
-                                    notifyDataSetChanged();
-                                }})
-                            .setNegativeButton(R.string.geolocation_settings_page_dialog_cancel_button, null)
-                            .setIconAttribute(android.R.attr.alertDialogIcon)
-                            .show();
+                                .setMessage(R.string.geolocation_settings_page_dialog_message)
+                                .setPositiveButton(R.string.geolocation_settings_page_dialog_ok_button,
+                                        new AlertDialog.OnClickListener() {
+                                            public void onClick(DialogInterface dlg, int which) {
+                                                GeolocationPermissions.getInstance().clear(mCurrentSite.getOrigin());
+                                                mCurrentSite.removeFeature(Site.FEATURE_GEOLOCATION);
+                                                if (mCurrentSite.getFeatureCount() == 0) {
+                                                    finish();
+                                                }
+                                                askForOrigins();
+                                                notifyDataSetChanged();
+                                            }
+                                        })
+                                .setNegativeButton(R.string.geolocation_settings_page_dialog_cancel_button, null)
+                                .setIconAttribute(android.R.attr.alertDialogIcon)
+                                .show();
                         break;
                 }
             } else {
@@ -637,7 +638,7 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.website_settings, container, false);
         Bundle args = getArguments();
         if (args != null) {
@@ -681,23 +682,24 @@ public class WebsiteSettingsFragment extends ListFragment implements OnClickList
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-        case R.id.clear_all_button:
-         // Show the prompt to clear all origins of their data and geolocation permissions.
-            new AlertDialog.Builder(getActivity())
-                    .setMessage(R.string.website_settings_clear_all_dialog_message)
-                    .setPositiveButton(R.string.website_settings_clear_all_dialog_ok_button,
-                            new AlertDialog.OnClickListener() {
-                                public void onClick(DialogInterface dlg, int which) {
-                                    WebStorage.getInstance().deleteAllData();
-                                    GeolocationPermissions.getInstance().clearAll();
-                                    WebStorageSizeManager.resetLastOutOfSpaceNotificationTime();
-                                    mAdapter.askForOrigins();
-                                    finish();
-                                }})
-                    .setNegativeButton(R.string.website_settings_clear_all_dialog_cancel_button, null)
-                    .setIconAttribute(android.R.attr.alertDialogIcon)
-                    .show();
-            break;
+            case R.id.clear_all_button:
+                // Show the prompt to clear all origins of their data and geolocation permissions.
+                new AlertDialog.Builder(getActivity())
+                        .setMessage(R.string.website_settings_clear_all_dialog_message)
+                        .setPositiveButton(R.string.website_settings_clear_all_dialog_ok_button,
+                                new AlertDialog.OnClickListener() {
+                                    public void onClick(DialogInterface dlg, int which) {
+                                        WebStorage.getInstance().deleteAllData();
+                                        GeolocationPermissions.getInstance().clearAll();
+                                        WebStorageSizeManager.resetLastOutOfSpaceNotificationTime();
+                                        mAdapter.askForOrigins();
+                                        finish();
+                                    }
+                                })
+                        .setNegativeButton(R.string.website_settings_clear_all_dialog_cancel_button, null)
+                        .setIconAttribute(android.R.attr.alertDialogIcon)
+                        .show();
+                break;
         }
     }
 }

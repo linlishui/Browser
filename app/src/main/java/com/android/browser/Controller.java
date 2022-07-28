@@ -43,8 +43,6 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.provider.Browser;
-import android.provider.BrowserContract;
-import android.provider.BrowserContract.Images;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Intents.Insert;
 import android.speech.RecognizerIntent;
@@ -77,6 +75,8 @@ import android.widget.Toast;
 
 import com.android.browser.IntentHandler.UrlData;
 import com.android.browser.UI.ComboViews;
+import com.android.browser.compat.BrowserContractCompat;
+import com.android.browser.compat.BrowserContractCompat.Images;
 import com.android.browser.provider.BrowserProvider2.Thumbnails;
 
 import java.io.ByteArrayOutputStream;
@@ -102,7 +102,7 @@ public class Controller
 
     private static final String LOGTAG = "Controller";
     private static final String SEND_APP_ID_EXTRA =
-        "android.speech.extras.SEND_APPLICATION_ID_EXTRA";
+            "android.speech.extras.SEND_APPLICATION_ID_EXTRA";
     private static final String INCOGNITO_URI = "browser:incognito";
 
 
@@ -131,10 +131,10 @@ public class Controller
     // As the ids are dynamically created, we can't guarantee that they will
     // be in sequence, so this static array maps ids to a window number.
     final static private int[] WINDOW_SHORTCUT_ID_ARRAY =
-    { R.id.window_one_menu_id, R.id.window_two_menu_id,
-      R.id.window_three_menu_id, R.id.window_four_menu_id,
-      R.id.window_five_menu_id, R.id.window_six_menu_id,
-      R.id.window_seven_menu_id, R.id.window_eight_menu_id };
+            {R.id.window_one_menu_id, R.id.window_two_menu_id,
+                    R.id.window_three_menu_id, R.id.window_four_menu_id,
+                    R.id.window_five_menu_id, R.id.window_six_menu_id,
+                    R.id.window_seven_menu_id, R.id.window_eight_menu_id};
 
     // "source" parameter for Google search through search key
     final static String GOOGLE_SEARCH_SOURCE_SEARCHKEY = "browser-key";
@@ -146,9 +146,9 @@ public class Controller
 
     // Only view images using these schemes
     private static final String[] IMAGE_VIEWABLE_SCHEMES = {
-        "http",
-        "https",
-        "file"
+            "http",
+            "https",
+            "file"
     };
 
     // A bitmap that is re-used in createScreenshot as scratch space
@@ -246,7 +246,7 @@ public class Controller
 
         };
         browser.getContentResolver().registerContentObserver(
-                BrowserContract.Bookmarks.CONTENT_URI, true, mBookmarksObserver);
+                BrowserContractCompat.Bookmarks.CONTENT_URI, true, mBookmarksObserver);
 
         mNetworkHandler = new NetworkStateHandler(mActivity, this);
         // Start watching the default geolocation permissions
@@ -274,8 +274,8 @@ public class Controller
         yesterday.add(Calendar.DATE, -1);
 
         final boolean restoreIncognitoTabs = !(lastActiveDate == null
-            || lastActiveDate.before(yesterday)
-            || lastActiveDate.after(today));
+                || lastActiveDate.before(yesterday)
+                || lastActiveDate.after(today));
 
         // Find out if we will restore any state and remember the tab.
         final long currentTabId =
@@ -290,7 +290,8 @@ public class Controller
 
         GoogleAccountLogin.startLoginIfNeeded(mActivity,
                 new Runnable() {
-                    @Override public void run() {
+                    @Override
+                    public void run() {
                         onPreloginFinished(icicle, intent, currentTabId,
                                 restoreIncognitoTabs);
                     }
@@ -298,7 +299,7 @@ public class Controller
     }
 
     private void onPreloginFinished(Bundle icicle, Intent intent, long currentTabId,
-            boolean restoreIncognitoTabs) {
+                                    boolean restoreIncognitoTabs) {
         if (currentTabId == -1) {
             BackgroundHandler.execute(new PruneThumbnails(mActivity, null));
             if (intent == null) {
@@ -476,8 +477,7 @@ public class Controller
                     case OPEN_BOOKMARKS:
                         bookmarksOrHistoryPicker(ComboViews.Bookmarks);
                         break;
-                    case FOCUS_NODE_HREF:
-                    {
+                    case FOCUS_NODE_HREF: {
                         String url = (String) msg.getData().get("url");
                         String title = (String) msg.getData().get("title");
                         String src = (String) msg.getData().get("src");
@@ -569,18 +569,19 @@ public class Controller
     /**
      * Share a page, providing the title, url, favicon, and a screenshot.  Uses
      * an {@link Intent} to launch the Activity chooser.
-     * @param c Context used to launch a new Activity.
-     * @param title Title of the page.  Stored in the Intent with
-     *          {@link Intent#EXTRA_SUBJECT}
-     * @param url URL of the page.  Stored in the Intent with
-     *          {@link Intent#EXTRA_TEXT}
-     * @param favicon Bitmap of the favicon for the page.  Stored in the Intent
-     *          with {@link Browser#EXTRA_SHARE_FAVICON}
+     *
+     * @param c          Context used to launch a new Activity.
+     * @param title      Title of the page.  Stored in the Intent with
+     *                   {@link Intent#EXTRA_SUBJECT}
+     * @param url        URL of the page.  Stored in the Intent with
+     *                   {@link Intent#EXTRA_TEXT}
+     * @param favicon    Bitmap of the favicon for the page.  Stored in the Intent
+     *                   with {@link Browser#EXTRA_SHARE_FAVICON}
      * @param screenshot Bitmap of a screenshot of the page.  Stored in the
-     *          Intent with {@link Browser#EXTRA_SHARE_SCREENSHOT}
+     *                   Intent with {@link Browser#EXTRA_SHARE_SCREENSHOT}
      */
     static final void sharePage(Context c, String title, String url,
-            Bitmap favicon, Bitmap screenshot) {
+                                Bitmap favicon, Bitmap screenshot) {
         Intent send = new Intent(Intent.ACTION_SEND);
         send.setType("text/plain");
         send.putExtra(Intent.EXTRA_TEXT, url);
@@ -590,7 +591,7 @@ public class Controller
         try {
             c.startActivity(Intent.createChooser(send, c.getString(
                     R.string.choosertitle_sharevia)));
-        } catch(android.content.ActivityNotFoundException ex) {
+        } catch (android.content.ActivityNotFoundException ex) {
             // if no app handles it, do nothing
         }
     }
@@ -670,6 +671,7 @@ public class Controller
     /**
      * Save the current state to outState. Does not write the state to
      * disk.
+     *
      * @return Bundle containing the current state of all tabs.
      */
     /* package */ Bundle createSaveState() {
@@ -716,6 +718,7 @@ public class Controller
 
     /**
      * resume all WebView timers using the WebView instance of the given tab
+     *
      * @param tab guaranteed non-null
      */
     private void resumeWebViewTimers(Tab tab) {
@@ -729,6 +732,7 @@ public class Controller
 
     /**
      * Pause all WebView timers using the WebView of the given tab
+     *
      * @param tab
      * @return true if the timers are paused or tab is null
      */
@@ -861,7 +865,7 @@ public class Controller
         // Performance probe
         if (false) {
             Performance.onPageFinished(tab.getUrl());
-         }
+        }
 
         Performance.tracePageFinished();
     }
@@ -894,10 +898,10 @@ public class Controller
                 // a pending update for the tab.
                 if (tab.shouldUpdateThumbnail() &&
                         (tab.inForeground() && !didUserStopLoading()
-                        || !tab.inForeground())) {
+                                || !tab.inForeground())) {
                     if (!mHandler.hasMessages(UPDATE_BOOKMARK_THUMBNAIL, tab)) {
                         mHandler.sendMessageDelayed(mHandler.obtainMessage(
-                                UPDATE_BOOKMARK_THUMBNAIL, 0, 0, tab),
+                                        UPDATE_BOOKMARK_THUMBNAIL, 0, 0, tab),
                                 500);
                     }
                 }
@@ -985,22 +989,23 @@ public class Controller
     public void getVisitedHistory(final ValueCallback<String[]> callback) {
         AsyncTask<Void, Void, String[]> task =
                 new AsyncTask<Void, Void, String[]>() {
-            @Override
-            public String[] doInBackground(Void... unused) {
-                return Browser.getVisitedHistory(mActivity.getContentResolver());
-            }
-            @Override
-            public void onPostExecute(String[] result) {
-                callback.onReceiveValue(result);
-            }
-        };
+                    @Override
+                    public String[] doInBackground(Void... unused) {
+                        return Browser.getVisitedHistory(mActivity.getContentResolver());
+                    }
+
+                    @Override
+                    public void onPostExecute(String[] result) {
+                        callback.onReceiveValue(result);
+                    }
+                };
         task.execute();
     }
 
     @Override
     public void onReceivedHttpAuthRequest(Tab tab, WebView view,
-            final HttpAuthHandler handler, final String host,
-            final String realm) {
+                                          final HttpAuthHandler handler, final String host,
+                                          final String realm) {
         String username = null;
         String password = null;
 
@@ -1018,7 +1023,9 @@ public class Controller
         if (username != null && password != null) {
             handler.proceed(username, password);
         } else {
-            if (tab.inForeground() && !handler.suppressDialog()) {
+            // fixme: HttpAuthHandler.suppressDialog() method lost in high api
+            //if (tab.inForeground() && !handler.suppressDialog()) {
+            if (tab.inForeground()) {
                 mPageDialogsHandler.showHttpAuthentication(tab, handler, host, realm);
             } else {
                 handler.cancel();
@@ -1028,8 +1035,8 @@ public class Controller
 
     @Override
     public void onDownloadStart(Tab tab, String url, String userAgent,
-            String contentDisposition, String mimetype, String referer,
-            long contentLength) {
+                                String contentDisposition, String mimetype, String referer,
+                                long contentLength) {
         WebView w = tab.getWebView();
         DownloadHandler.onDownloadStart(mActivity, url, userAgent,
                 contentDisposition, mimetype, referer, w.isPrivateBrowsingEnabled());
@@ -1058,7 +1065,7 @@ public class Controller
 
     @Override
     public void showSslCertificateOnError(WebView view, SslErrorHandler handler,
-            SslError error) {
+                                          SslError error) {
         mPageDialogsHandler.showSSLCertificateOnError(view, handler, error);
     }
 
@@ -1082,7 +1089,7 @@ public class Controller
      * icon is valid.
      */
     private void maybeUpdateFavicon(Tab tab, final String originalUrl,
-            final String url, Bitmap favicon) {
+                                    final String url, Bitmap favicon) {
         if (favicon == null) {
             return;
         }
@@ -1117,7 +1124,7 @@ public class Controller
 
     @Override
     public void showCustomView(Tab tab, View view, int requestedOrientation,
-            WebChromeClient.CustomViewCallback callback) {
+                               WebChromeClient.CustomViewCallback callback) {
         if (tab.inForeground()) {
             if (mUi.isCustomViewShowing()) {
                 callback.onCustomViewHidden();
@@ -1145,7 +1152,7 @@ public class Controller
 
     @Override
     public void onActivityResult(int requestCode, int resultCode,
-            Intent intent) {
+                                 Intent intent) {
         if (getCurrentTopWebView() == null) return;
         switch (requestCode) {
             case PREFERENCES_PAGE:
@@ -1183,7 +1190,7 @@ public class Controller
                             ComboViewActivity.EXTRA_OPEN_SNAPSHOT, -1);
                     if (id >= 0) {
                         Toast.makeText(mActivity, "Snapshot Tab no longer supported",
-                            Toast.LENGTH_LONG).show();
+                                Toast.LENGTH_LONG).show();
                     }
                 }
                 break;
@@ -1204,6 +1211,7 @@ public class Controller
 
     /**
      * Open the Go page.
+     *
      * @param startWithHistory If true, open starting on the history tab.
      *                         Otherwise, start with the bookmarks tab.
      */
@@ -1260,7 +1268,7 @@ public class Controller
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
-            ContextMenuInfo menuInfo) {
+                                    ContextMenuInfo menuInfo) {
         if (v instanceof TitleBar) {
             return;
         }
@@ -1301,10 +1309,10 @@ public class Controller
                 type == WebView.HitTestResult.GEO_TYPE);
         menu.setGroupVisible(R.id.IMAGE_MENU,
                 type == WebView.HitTestResult.IMAGE_TYPE
-                || type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE);
+                        || type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE);
         menu.setGroupVisible(R.id.ANCHOR_MENU,
                 type == WebView.HitTestResult.SRC_ANCHOR_TYPE
-                || type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE);
+                        || type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE);
         // Setup custom handling depending on the type
         switch (type) {
             case WebView.HitTestResult.PHONE_TYPE:
@@ -1319,7 +1327,7 @@ public class Controller
                         addIntent);
                 menu.findItem(R.id.copy_phone_context_menu_id)
                         .setOnMenuItemClickListener(
-                        new Copy(extra));
+                                new Copy(extra));
                 break;
 
             case WebView.HitTestResult.EMAIL_TYPE:
@@ -1329,7 +1337,7 @@ public class Controller
                                 .parse(WebView.SCHEME_MAILTO + extra)));
                 menu.findItem(R.id.copy_mail_context_menu_id)
                         .setOnMenuItemClickListener(
-                        new Copy(extra));
+                                new Copy(extra));
                 break;
 
             case WebView.HitTestResult.GEO_TYPE:
@@ -1340,7 +1348,7 @@ public class Controller
                                         + URLEncoder.encode(extra))));
                 menu.findItem(R.id.copy_geo_context_menu_id)
                         .setOnMenuItemClickListener(
-                        new Copy(extra));
+                                new Copy(extra));
                 break;
 
             case WebView.HitTestResult.SRC_ANCHOR_TYPE:
@@ -1399,25 +1407,25 @@ public class Controller
                                 @Override
                                 public boolean onMenuItemClick(MenuItem item) {
                                     sharePage(mActivity, null, extra, null,
-                                    null);
+                                            null);
                                     return true;
                                 }
                             }
-                        );
+                    );
                 }
                 menu.findItem(R.id.view_image_context_menu_id)
                         .setOnMenuItemClickListener(new OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        if (isImageViewableUri(Uri.parse(extra))) {
-                            openTab(extra, mTabControl.getCurrentTab(), true, true);
-                        } else {
-                            Log.e(LOGTAG, "Refusing to view image with invalid URI, \"" +
-                                    extra + "\"");
-                        }
-                        return false;
-                    }
-                });
+                            @Override
+                            public boolean onMenuItemClick(MenuItem item) {
+                                if (isImageViewableUri(Uri.parse(extra))) {
+                                    openTab(extra, mTabControl.getCurrentTab(), true, true);
+                                } else {
+                                    Log.e(LOGTAG, "Refusing to view image with invalid URI, \"" +
+                                            extra + "\"");
+                                }
+                                return false;
+                            }
+                        });
                 menu.findItem(R.id.download_context_menu_id).setOnMenuItemClickListener(
                         new Download(mActivity, extra, webview.isPrivateBrowsingEnabled(),
                                 webview.getSettings().getUserAgentString()));
@@ -1455,7 +1463,7 @@ public class Controller
         }
         MenuItem dest = menu.findItem(R.id.stop_reload_menu_id);
         MenuItem src = ((tab != null) && tab.inPageLoad()) ?
-                menu.findItem(R.id.stop_menu_id):
+                menu.findItem(R.id.stop_menu_id) :
                 menu.findItem(R.id.reload_menu_id);
         if (src != null) {
             dest.setIcon(src.getIcon());
@@ -1675,21 +1683,20 @@ public class Controller
             case R.id.window_five_menu_id:
             case R.id.window_six_menu_id:
             case R.id.window_seven_menu_id:
-            case R.id.window_eight_menu_id:
-                {
-                    int menuid = item.getItemId();
-                    for (int id = 0; id < WINDOW_SHORTCUT_ID_ARRAY.length; id++) {
-                        if (WINDOW_SHORTCUT_ID_ARRAY[id] == menuid) {
-                            Tab desiredTab = mTabControl.getTab(id);
-                            if (desiredTab != null &&
-                                    desiredTab != mTabControl.getCurrentTab()) {
-                                switchToTab(desiredTab);
-                            }
-                            break;
+            case R.id.window_eight_menu_id: {
+                int menuid = item.getItemId();
+                for (int id = 0; id < WINDOW_SHORTCUT_ID_ARRAY.length; id++) {
+                    if (WINDOW_SHORTCUT_ID_ARRAY[id] == menuid) {
+                        Tab desiredTab = mTabControl.getTab(id);
+                        if (desiredTab != null &&
+                                desiredTab != mTabControl.getCurrentTab()) {
+                            switchToTab(desiredTab);
                         }
+                        break;
                     }
                 }
-                break;
+            }
+            break;
 
             default:
                 return false;
@@ -1846,7 +1853,7 @@ public class Controller
 
     int getActionModeHeight() {
         TypedArray actionBarSizeTypedArray = mActivity.obtainStyledAttributes(
-                    new int[] { android.R.attr.actionBarSize });
+                new int[]{android.R.attr.actionBarSize});
         int size = (int) actionBarSizeTypedArray.getDimension(0, 0f);
         actionBarSizeTypedArray.recycle();
         return size;
@@ -1898,11 +1905,12 @@ public class Controller
 
     /**
      * add the current page as a bookmark to the given folder id
-     * @param folderId use -1 for the default folder
+     *
+     * @param folderId     use -1 for the default folder
      * @param editExisting If true, check to see whether the site is already
-     *          bookmarked, and if it is, edit that bookmark.  If false, and
-     *          the site is already bookmarked, do not attempt to edit the
-     *          existing bookmark.
+     *                     bookmarked, and if it is, edit that bookmark.  If false, and
+     *                     the site is already bookmarked, do not attempt to edit the
+     *                     existing bookmark.
      */
     @Override
     public Intent createBookmarkCurrentPageIntent(boolean editExisting) {
@@ -1912,8 +1920,8 @@ public class Controller
         }
         Intent i = new Intent(mActivity,
                 AddBookmarkPage.class);
-        i.putExtra(BrowserContract.Bookmarks.URL, w.getUrl());
-        i.putExtra(BrowserContract.Bookmarks.TITLE, w.getTitle());
+        i.putExtra(BrowserContractCompat.Bookmarks.URL, w.getUrl());
+        i.putExtra(BrowserContractCompat.Bookmarks.TITLE, w.getTitle());
         String touchIconUrl = w.getTouchIconUrl();
         if (touchIconUrl != null) {
             i.putExtra(AddBookmarkPage.TOUCH_ICON_URL, touchIconUrl);
@@ -1923,10 +1931,10 @@ public class Controller
                         settings.getUserAgentString());
             }
         }
-        i.putExtra(BrowserContract.Bookmarks.THUMBNAIL,
+        i.putExtra(BrowserContractCompat.Bookmarks.THUMBNAIL,
                 createScreenshot(w, getDesiredThumbnailWidth(mActivity),
-                getDesiredThumbnailHeight(mActivity)));
-        i.putExtra(BrowserContract.Bookmarks.FAVICON, w.getFavicon());
+                        getDesiredThumbnailHeight(mActivity)));
+        i.putExtra(BrowserContractCompat.Bookmarks.FAVICON, w.getFavicon());
         if (editExisting) {
             i.putExtra(AddBookmarkPage.CHECK_FOR_DUPE, true);
         }
@@ -1948,6 +1956,7 @@ public class Controller
     /**
      * Return the desired width for thumbnail screenshots, which are stored in
      * the database, and used on the bookmarks screen.
+     *
      * @param context Context for finding out the density of the screen.
      * @return desired width for thumbnail screenshot.
      */
@@ -1959,6 +1968,7 @@ public class Controller
     /**
      * Return the desired height for thumbnail screenshots, which are stored in
      * the database, and used on the bookmarks screen.
+     *
      * @param context Context for finding out the density of the screen.
      * @return desired height for thumbnail screenshot.
      */
@@ -1991,14 +2001,14 @@ public class Controller
         int contentWidth = view.getContentWidth();
         float overviewScale = scaledWidth / (view.getScale() * contentWidth);
         if (view instanceof BrowserWebView) {
-            int dy = -((BrowserWebView)view).getTitleHeight();
+            int dy = -((BrowserWebView) view).getTitleHeight();
             canvas.translate(0, dy * overviewScale);
         }
 
         canvas.scale(overviewScale, overviewScale);
 
         if (view instanceof BrowserWebView) {
-            ((BrowserWebView)view).drawContent(canvas);
+            ((BrowserWebView) view).drawContent(canvas);
         } else {
             view.draw(canvas);
         }
@@ -2107,7 +2117,7 @@ public class Controller
         }
 
         public Download(Activity activity, String toDownload, boolean privateBrowsing,
-                String userAgent) {
+                        String userAgent) {
             mActivity = activity;
             mText = toDownload;
             mPrivateBrowsing = privateBrowsing;
@@ -2127,7 +2137,7 @@ public class Controller
                 outputStream.write(uri.getData());
                 final DownloadManager manager =
                         (DownloadManager) mActivity.getSystemService(Context.DOWNLOAD_SERVICE);
-                 manager.addCompletedDownload(target.getName(),
+                manager.addCompletedDownload(target.getName(),
                         mActivity.getTitle().toString(), false,
                         uri.getMimeType(), target.getAbsolutePath(),
                         uri.getData().length, true);
@@ -2304,19 +2314,19 @@ public class Controller
 
     @Override
     public Tab openTab(String url, boolean incognito, boolean setActive,
-            boolean useCurrent) {
+                       boolean useCurrent) {
         return openTab(url, incognito, setActive, useCurrent, null);
     }
 
     @Override
     public Tab openTab(String url, Tab parent, boolean setActive,
-            boolean useCurrent) {
+                       boolean useCurrent) {
         return openTab(url, (parent != null) && parent.isPrivateBrowsingEnabled(),
                 setActive, useCurrent, parent);
     }
 
     public Tab openTab(String url, boolean incognito, boolean setActive,
-            boolean useCurrent, Tab parent) {
+                       boolean useCurrent, Tab parent) {
         Tab tab = createNewTab(incognito, setActive, useCurrent);
         if (tab != null) {
             if (parent != null && parent != tab) {
@@ -2334,7 +2344,7 @@ public class Controller
     // setActive: ste tab as current tab
     // useCurrent: if no new tab can be created, return current tab
     private Tab createNewTab(boolean incognito, boolean setActive,
-            boolean useCurrent) {
+                             boolean useCurrent) {
         Tab tab = null;
         if (mTabControl.canCreateNewTab()) {
             tab = mTabControl.createNewTab(incognito);
@@ -2356,8 +2366,8 @@ public class Controller
     /**
      * @param tab the tab to switch to
      * @return boolean True if we successfully switched to a different tab.  If
-     *                 the indexth tab is null, or if that tab is the same as
-     *                 the current one, return false.
+     * the indexth tab is null, or if that tab is the same as
+     * the current one, return false.
      */
     @Override
     public boolean switchToTab(Tab tab) {
@@ -2444,8 +2454,9 @@ public class Controller
      * Load the URL into the given WebView and update the title bar
      * to reflect the new load.  Call this instead of WebView.loadUrl
      * directly.
+     *
      * @param view The WebView used to load url.
-     * @param url The URL to load.
+     * @param url  The URL to load.
      */
     @Override
     public void loadUrl(Tab tab, String url) {
@@ -2463,7 +2474,8 @@ public class Controller
     /**
      * Load UrlData into a Tab and update the title bar to reflect the new
      * load.  Call this instead of UrlData.loadIn directly.
-     * @param t The Tab used to load.
+     *
+     * @param t    The Tab used to load.
      * @param data The UrlData being loaded.
      */
     protected void loadUrlDataIn(Tab t, UrlData data) {
@@ -2545,11 +2557,11 @@ public class Controller
      * returns the current tab if it can't advance
      */
     private Tab getPrevTab() {
-        int pos  = mTabControl.getCurrentPosition() - 1;
-        if ( pos < 0) {
+        int pos = mTabControl.getCurrentPosition() - 1;
+        if (pos < 0) {
             pos = mTabControl.getTabCount() - 1;
         }
-        return  mTabControl.getTab(pos);
+        return mTabControl.getTab(pos);
     }
 
     boolean isMenuOrCtrlKey(int keyCode) {
@@ -2582,7 +2594,7 @@ public class Controller
         boolean ctrl = event.hasModifiers(KeyEvent.META_CTRL_ON);
         boolean shift = event.hasModifiers(KeyEvent.META_SHIFT_ON);
 
-        switch(keyCode) {
+        switch (keyCode) {
             case KeyEvent.KEYCODE_TAB:
                 if (event.isCtrlPressed()) {
                     if (event.isShiftPressed()) {
@@ -2662,18 +2674,18 @@ public class Controller
 //          case KeyEvent.KEYCODE_Z:    // unused
         }
         // it is a regular key and webview is not null
-         return mUi.dispatchKey(keyCode, event);
+        return mUi.dispatchKey(keyCode, event);
     }
 
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        switch(keyCode) {
-        case KeyEvent.KEYCODE_BACK:
-            if (mUi.isWebShowing()) {
-                bookmarksOrHistoryPicker(ComboViews.History);
-                return true;
-            }
-            break;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                if (mUi.isWebShowing()) {
+                    bookmarksOrHistoryPicker(ComboViews.History);
+                    return true;
+                }
+                break;
         }
         return false;
     }
@@ -2688,7 +2700,7 @@ public class Controller
             }
         }
         if (!event.hasNoModifiers()) return false;
-        switch(keyCode) {
+        switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 if (event.isTracking() && !event.isCanceled()) {
                     onBackKey();

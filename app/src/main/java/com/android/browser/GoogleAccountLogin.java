@@ -38,8 +38,8 @@ import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.Charset;
 
-import libcore.io.Streams;
-import libcore.net.http.ResponseUtils;
+import com.android.browser.util.Streams;
+import com.android.browser.util.ResponseUtils;
 
 public class GoogleAccountLogin implements Runnable,
         AccountManagerCallback<Bundle>, OnCancelListener {

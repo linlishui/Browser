@@ -27,8 +27,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.FileUtils;
-import android.provider.BrowserContract;
 import android.text.TextUtils;
+
+import com.android.browser.compat.BrowserContractCompat;
 
 import java.io.File;
 
@@ -156,7 +157,7 @@ public class SnapshotProvider extends ContentProvider {
         }
         final int match = URI_MATCHER.match(uri);
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-        String limit = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
+        String limit = uri.getQueryParameter(BrowserContractCompat.PARAM_LIMIT);
         switch (match) {
         case SNAPSHOTS_ID:
             selection = DatabaseUtils.concatenateWhere(selection, "_id=?");

@@ -32,7 +32,6 @@ import android.widget.TextView;
 
 /**
  * Displays page info
- *
  */
 public class PageDialogsHandler {
 
@@ -65,8 +64,8 @@ public class PageDialogsHandler {
         if (mPageInfoDialog != null) {
             mPageInfoDialog.dismiss();
             showPageInfo(mPageInfoView,
-                         mPageInfoFromShowSSLCertificateOnError,
-                         mUrlCertificateOnError);
+                    mPageInfoFromShowSSLCertificateOnError,
+                    mUrlCertificateOnError);
         }
         if (mSSLCertificateDialog != null) {
             mSSLCertificateDialog.dismiss();
@@ -75,8 +74,8 @@ public class PageDialogsHandler {
         if (mSSLCertificateOnErrorDialog != null) {
             mSSLCertificateOnErrorDialog.dismiss();
             showSSLCertificateOnError(mSSLCertificateOnErrorView,
-                                      mSSLCertificateOnErrorHandler,
-                                      mSSLCertificateOnErrorError);
+                    mSSLCertificateOnErrorHandler,
+                    mSSLCertificateOnErrorError);
         }
         if (mHttpAuthenticationDialog != null) {
             mHttpAuthenticationDialog.reshow();
@@ -108,10 +107,10 @@ public class PageDialogsHandler {
     /**
      * Set HTTP authentication password.
      *
-     * @param host The host for the password
-     * @param realm The realm for the password
+     * @param host     The host for the password
+     * @param realm    The realm for the password
      * @param username The username for the password. If it is null, it means
-     *            password can't be saved.
+     *                 password can't be saved.
      * @param password The password
      */
     public void setHttpAuthUsernamePassword(String host, String realm,
@@ -125,17 +124,18 @@ public class PageDialogsHandler {
 
     /**
      * Displays a page-info dialog.
-     * @param tab The tab to show info about
+     *
+     * @param tab                           The tab to show info about
      * @param fromShowSSLCertificateOnError The flag that indicates whether
-     * this dialog was opened from the SSL-certificate-on-error dialog or
-     * not. This is important, since we need to know whether to return to
-     * the parent dialog or simply dismiss.
-     * @param urlCertificateOnError The URL that invokes SSLCertificateError.
-     * Null when fromShowSSLCertificateOnError is false.
+     *                                      this dialog was opened from the SSL-certificate-on-error dialog or
+     *                                      not. This is important, since we need to know whether to return to
+     *                                      the parent dialog or simply dismiss.
+     * @param urlCertificateOnError         The URL that invokes SSLCertificateError.
+     *                                      Null when fromShowSSLCertificateOnError is false.
      */
     void showPageInfo(final Tab tab,
-            final boolean fromShowSSLCertificateOnError,
-            final String urlCertificateOnError) {
+                      final boolean fromShowSSLCertificateOnError,
+                      final String urlCertificateOnError) {
         if (tab == null) return;
         final LayoutInflater factory = LayoutInflater.from(mContext);
 
@@ -161,44 +161,44 @@ public class PageDialogsHandler {
         mUrlCertificateOnError = urlCertificateOnError;
 
         AlertDialog.Builder alertDialogBuilder =
-            new AlertDialog.Builder(mContext)
-            .setTitle(R.string.page_info)
-            .setIcon(android.R.drawable.ic_dialog_info)
-            .setView(pageInfoView)
-            .setPositiveButton(
-                R.string.ok,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog,
-                                        int whichButton) {
-                        mPageInfoDialog = null;
-                        mPageInfoView = null;
+                new AlertDialog.Builder(mContext)
+                        .setTitle(R.string.page_info)
+                        .setIcon(android.R.drawable.ic_dialog_info)
+                        .setView(pageInfoView)
+                        .setPositiveButton(
+                                R.string.ok,
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog,
+                                                        int whichButton) {
+                                        mPageInfoDialog = null;
+                                        mPageInfoView = null;
 
-                        // if we came here from the SSL error dialog
-                        if (fromShowSSLCertificateOnError) {
-                            // go back to the SSL error dialog
-                            showSSLCertificateOnError(
-                                mSSLCertificateOnErrorView,
-                                mSSLCertificateOnErrorHandler,
-                                mSSLCertificateOnErrorError);
-                        }
-                    }
-                })
-            .setOnCancelListener(
-                new DialogInterface.OnCancelListener() {
-                    public void onCancel(DialogInterface dialog) {
-                        mPageInfoDialog = null;
-                        mPageInfoView = null;
+                                        // if we came here from the SSL error dialog
+                                        if (fromShowSSLCertificateOnError) {
+                                            // go back to the SSL error dialog
+                                            showSSLCertificateOnError(
+                                                    mSSLCertificateOnErrorView,
+                                                    mSSLCertificateOnErrorHandler,
+                                                    mSSLCertificateOnErrorError);
+                                        }
+                                    }
+                                })
+                        .setOnCancelListener(
+                                new DialogInterface.OnCancelListener() {
+                                    public void onCancel(DialogInterface dialog) {
+                                        mPageInfoDialog = null;
+                                        mPageInfoView = null;
 
-                        // if we came here from the SSL error dialog
-                        if (fromShowSSLCertificateOnError) {
-                            // go back to the SSL error dialog
-                            showSSLCertificateOnError(
-                                mSSLCertificateOnErrorView,
-                                mSSLCertificateOnErrorHandler,
-                                mSSLCertificateOnErrorError);
-                        }
-                    }
-                });
+                                        // if we came here from the SSL error dialog
+                                        if (fromShowSSLCertificateOnError) {
+                                            // go back to the SSL error dialog
+                                            showSSLCertificateOnError(
+                                                    mSSLCertificateOnErrorView,
+                                                    mSSLCertificateOnErrorHandler,
+                                                    mSSLCertificateOnErrorError);
+                                        }
+                                    }
+                                });
 
         // if we have a main top-level page SSL certificate set or a certificate
         // error
@@ -206,27 +206,27 @@ public class PageDialogsHandler {
                 (view != null && view.getCertificate() != null)) {
             // add a 'View Certificate' button
             alertDialogBuilder.setNeutralButton(
-                R.string.view_certificate,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog,
-                                        int whichButton) {
-                        mPageInfoDialog = null;
-                        mPageInfoView = null;
+                    R.string.view_certificate,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                            int whichButton) {
+                            mPageInfoDialog = null;
+                            mPageInfoView = null;
 
-                        // if we came here from the SSL error dialog
-                        if (fromShowSSLCertificateOnError) {
-                            // go back to the SSL error dialog
-                            showSSLCertificateOnError(
-                                mSSLCertificateOnErrorView,
-                                mSSLCertificateOnErrorHandler,
-                                mSSLCertificateOnErrorError);
-                        } else {
-                            // otherwise, display the top-most certificate from
-                            // the chain
-                            showSSLCertificate(tab);
+                            // if we came here from the SSL error dialog
+                            if (fromShowSSLCertificateOnError) {
+                                // go back to the SSL error dialog
+                                showSSLCertificateOnError(
+                                        mSSLCertificateOnErrorView,
+                                        mSSLCertificateOnErrorHandler,
+                                        mSSLCertificateOnErrorError);
+                            } else {
+                                // otherwise, display the top-most certificate from
+                                // the chain
+                                showSSLCertificate(tab);
+                            }
                         }
-                    }
-                });
+                    });
         }
 
         mPageInfoDialog = alertDialogBuilder.show();
@@ -235,6 +235,7 @@ public class PageDialogsHandler {
     /**
      * Displays the main top-level page SSL certificate dialog
      * (accessible from the Page-Info dialog).
+     *
      * @param tab The tab to show certificate for.
      */
     private void showSSLCertificate(final Tab tab) {
@@ -249,7 +250,7 @@ public class PageDialogsHandler {
                 .setPositiveButton(R.string.ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,
-                                    int whichButton) {
+                                                int whichButton) {
                                 mSSLCertificateDialog = null;
                                 mSSLCertificateView = null;
 
@@ -270,10 +271,11 @@ public class PageDialogsHandler {
 
     /**
      * Displays the SSL error certificate dialog.
-     * @param view The target web-view.
+     *
+     * @param view    The target web-view.
      * @param handler The SSL error handler responsible for cancelling the
-     * connection that resulted in an SSL error or proceeding per user request.
-     * @param error The SSL error object.
+     *                connection that resulted in an SSL error or proceeding per user request.
+     * @param error   The SSL error object.
      */
     void showSSLCertificateOnError(
             final WebView view, final SslErrorHandler handler,
@@ -291,7 +293,7 @@ public class PageDialogsHandler {
                 .setPositiveButton(R.string.ok,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,
-                                    int whichButton) {
+                                                int whichButton) {
                                 mSSLCertificateOnErrorDialog = null;
                                 mSSLCertificateOnErrorView = null;
                                 mSSLCertificateOnErrorHandler = null;
@@ -301,10 +303,10 @@ public class PageDialogsHandler {
                                         onReceivedSslError(view, handler, error);
                             }
                         })
-                 .setNeutralButton(R.string.page_info_view,
+                .setNeutralButton(R.string.page_info_view,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,
-                                    int whichButton) {
+                                                int whichButton) {
                                 mSSLCertificateOnErrorDialog = null;
 
                                 // do not clear the dialog state: we will
@@ -312,7 +314,7 @@ public class PageDialogsHandler {
                                 // user is done exploring the page-info details
 
                                 showPageInfo(mController.getTabControl()
-                                        .getTabFromView(view),
+                                                .getTabFromView(view),
                                         true,
                                         error.getUrl());
                             }
@@ -340,18 +342,17 @@ public class PageDialogsHandler {
      * problems with the certificate and a different icon is used.
      */
     private AlertDialog.Builder createSslCertificateDialog(SslCertificate certificate,
-            SslError error) {
+                                                           SslError error) {
         View certificateView = certificate.inflateCertificateView(mContext);
-        final LinearLayout placeholder =
-                (LinearLayout)certificateView.findViewById(com.android.internal.R.id.placeholder);
+        final LinearLayout placeholder = (LinearLayout) certificateView.findViewById(com.android.internal.R.id.placeholder);
 
         LayoutInflater factory = LayoutInflater.from(mContext);
         int iconId;
 
         if (error == null) {
             iconId = R.drawable.ic_dialog_browser_certificate_secure;
-            LinearLayout table = (LinearLayout)factory.inflate(R.layout.ssl_success, placeholder);
-            TextView successString = (TextView)table.findViewById(R.id.success);
+            LinearLayout table = (LinearLayout) factory.inflate(R.layout.ssl_success, placeholder);
+            TextView successString = (TextView) table.findViewById(R.id.success);
             successString.setText(com.android.internal.R.string.ssl_certificate_is_valid);
         } else {
             iconId = R.drawable.ic_dialog_browser_certificate_partially_secure;
@@ -378,7 +379,7 @@ public class PageDialogsHandler {
             // therefore expect the condition below to never be hit. We use it
             // as as safety net in case a new error type is added to SslError
             // without the logic above being updated accordingly.
-            if (placeholder.getChildCount() == 0) {
+            if (placeholder != null && placeholder.getChildCount() == 0) {
                 addError(factory, placeholder, R.string.ssl_unknown);
             }
         }
@@ -390,8 +391,10 @@ public class PageDialogsHandler {
     }
 
     private void addError(LayoutInflater inflater, LinearLayout parent, int error) {
-        TextView textView = (TextView) inflater.inflate(R.layout.ssl_warning,
-                parent, false);
+        if (parent == null) {
+            return;
+        }
+        TextView textView = (TextView) inflater.inflate(R.layout.ssl_warning, parent, false);
         textView.setText(error);
         parent.addView(textView);
     }
