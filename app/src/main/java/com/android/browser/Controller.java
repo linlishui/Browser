@@ -97,8 +97,7 @@ import java.util.Map;
 /**
  * Controller for browser
  */
-public class Controller
-        implements WebViewController, UiController, ActivityController {
+public class Controller implements WebViewController, UiController, ActivityController {
 
     private static final String LOGTAG = "Controller";
     private static final String SEND_APP_ID_EXTRA =
